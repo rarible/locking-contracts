@@ -8,7 +8,7 @@ const keccak256 = require('keccak256')
 // "1c8aff950685c2ed4bc3174f3472287b56d9517b9c948127319a09a7a36deac8"
 const { expectThrow } = require("@daonomic/tests-common");
 const truffleAssert = require('truffle-assertions');
-const { signPersonalMessage } = require("../../scripts/sign.js");
+const { signPersonalMessage } = require("../scripts/sign.js");
 // const web3 = require('web3');
 
 contract("RariMineV3", accounts => {

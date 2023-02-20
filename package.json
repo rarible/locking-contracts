@@ -6,17 +6,17 @@
     "test": "test"
   },
   "scripts": {
-    "test": "truffle test",
-    "compile_hardhat": "npx hardhat compile",
-    "test_hardhat": "npx hardhat test"
+    "compile": "npx hardhat compile",
+    "test": "npx hardhat test"
   },
   "dependencies": {
     "@nomicfoundation/hardhat-foundry": "^1.0.0",
     "@nomiclabs/hardhat-truffle5": "^2.0.7",
     "@nomiclabs/hardhat-web3": "^2.0.0",
     "@openzeppelin/contracts-upgradeable": "3.4.0",
-    "@rarible/lib-signature": "^0.1.2",
-    "@rarible/test": "^0.0.2",
+    "@vfadeev/lib-signature": "^0.1.3",
+    "@vfadeev/tokens-test": "^0.0.3",
+    "dotenv": "^16.0.3",
     "hardhat-gas-reporter": "^1.0.9",
     "hardhat-truffle5": "^1.0.1",
     "keccak256": "^1.0.6",
