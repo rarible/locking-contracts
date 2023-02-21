@@ -6,8 +6,10 @@
     "test": "test"
   },
   "scripts": {
-    "compile": "npx hardhat compile",
-    "test": "npx hardhat test"
+    "compile": "npx hardhat clean && npx hardhat compile",
+    "test": "npx hardhat test",
+    "compile_foundry": "forge build",
+    "test_foundry": "forge test"
   },
   "dependencies": {
     "@nomicfoundation/hardhat-foundry": "^1.0.0",
