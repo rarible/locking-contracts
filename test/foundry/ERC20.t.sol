@@ -17,9 +17,7 @@ contract CounterTest is DSTest {
     function setUp() public {
         utils = new Utilities();
         users = utils.createUsers(5);
-
         testERC20 = new TestERC20();
-        
     }
 
     function testMint() public {
