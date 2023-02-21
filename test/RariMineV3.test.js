@@ -1,7 +1,6 @@
 const RariMineV3 = artifacts.require("RariMineV3.sol");
 const ERC20 = artifacts.require("TestERC20.sol");
 const TestLocking = artifacts.require("TestLocking.sol");
-const LibSignatureTest = artifacts.require("LibSignatureTest.sol");
 const LibEncoderTest = artifacts.require("LibEncoderTest.sol");
 const keccak256 = require('keccak256')
 
@@ -15,7 +14,6 @@ contract("RariMineV3", accounts => {
     let rariMine;
     let token;
     let locking;
-    let libSignature;
     let libEncoder;
     let tokenOwner;
     let claimer1;
@@ -38,7 +36,6 @@ contract("RariMineV3", accounts => {
         signer = accounts[4];
         token = await ERC20.new();
         locking = await TestLocking.new();
-        libSignature = await LibSignatureTest.new();
         libEncoder = await LibEncoderTest.new();
         
         await locking.__Locking_init(token.address, 0, 0, 0); //initialize, set owner
