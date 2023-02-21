@@ -7,7 +7,7 @@ import {Utilities} from "./utils/Utilities.sol";
 import {Vm} from "forge-std/Vm.sol";
 import {DSTest} from "ds-test/test.sol";
 
-contract CounterTest is DSTest {
+contract TestERC20Test is DSTest {
     Vm internal immutable vm = Vm(HEVM_ADDRESS);
 
     Utilities internal utils;
@@ -21,6 +21,7 @@ contract CounterTest is DSTest {
     }
 
     function testMint() public {
+        console.log('test mint');
         console.log(users[0]);
         testERC20.mint(users[0], 1000);
         assertEq(testERC20.balanceOf(users[0]), 1000);
