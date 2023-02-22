@@ -1,6 +1,5 @@
 node_modules
 artifacts
 cache
-lib
 .env
 forge-cache
