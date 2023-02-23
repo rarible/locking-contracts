@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.7.6;
+pragma solidity 0.8.17;
 pragma abicoder v2;
 
 import "./INextVersionLock.sol";
@@ -10,9 +10,6 @@ import "./LockingVotes.sol";
 import "./ILocking.sol";
 
 contract Locking is ILocking, LockingBase, LockingRelock, LockingVotes {
-    using SafeMathUpgradeable96 for uint96;
-    using SafeMathUpgradeable32 for uint32;
-
     using LibBrokenLine for LibBrokenLine.BrokenLine;
 
     function __Locking_init(IERC20Upgradeable _token, uint32 _startingPointWeek, uint32 _minCliffPeriod, uint32 _minSlopePeriod) external initializer {
@@ -46,7 +43,7 @@ contract Locking is ILocking, LockingBase, LockingRelock, LockingVotes {
         uint32 currentBlock = getBlockNumber();
         uint32 time = roundTimestamp(currentBlock);
         addLines(account, _delegate, amount, slopePeriod, cliff, time, currentBlock);
-        accounts[account].amount = accounts[account].amount.add(amount);
+        accounts[account].amount = accounts[account].amount + (amount);
 
         require(token.transferFrom(msg.sender, address(this), amount), "transfer failed");
 
@@ -57,7 +54,7 @@ contract Locking is ILocking, LockingBase, LockingRelock, LockingVotes {
     function withdraw() external {
         uint96 value = getAvailableForWithdraw(msg.sender);
         if (value > 0) {
-            accounts[msg.sender].amount = accounts[msg.sender].amount.sub(value);
+            accounts[msg.sender].amount = accounts[msg.sender].amount - (value);
             require(token.transfer(msg.sender, value), "transfer failed");
         }
         emit Withdraw(msg.sender, value);
@@ -70,7 +67,7 @@ contract Locking is ILocking, LockingBase, LockingRelock, LockingVotes {
             uint32 currentBlock = getBlockNumber();
             uint32 time = roundTimestamp(currentBlock);
             uint96 bias = accounts[account].locked.actualValue(time, currentBlock);
-            value = value.sub(bias);
+            value = value - (bias);
         }
         return value;
     }
@@ -139,7 +136,7 @@ contract Locking is ILocking, LockingBase, LockingRelock, LockingVotes {
             LibBrokenLine.Line memory line = accounts[account].locked.initiatedLines[id[i]];
             (uint96 residue,,) = accounts[account].locked.remove(id[i], time, currentBlock);
 
-            accounts[account].amount = accounts[account].amount.sub(residue);
+            accounts[account].amount = accounts[account].amount - (residue);
 
             accounts[_delegate].balance.remove(id[i], time, currentBlock);
             totalSupplyLine.remove(id[i], time, currentBlock);

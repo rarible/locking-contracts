@@ -4,7 +4,7 @@
  *Submitted for verification at Etherscan.io on 2020-07-20
  */
 
-pragma solidity 0.7.6;
+pragma solidity 0.8.17;
 pragma abicoder v2;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -18,7 +18,6 @@ import "./IRariMine.sol";
 import "./ILocking.sol";
 
 contract RariMineV3 is OwnableUpgradeable, IRariMine {
-    using SafeMathUpgradeable for uint256;
     using LibString for string;
     using LibUint for uint256;
     using LibAddress for address;
@@ -65,7 +64,7 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
         uint256 _claimCliffWeeks,
         uint256 _claimSlopeWeeks,
         uint256 _claimFormulaClaim
-    ) internal initializer {
+    ) internal onlyInitializing {
         token = _token;
         tokenOwner = _tokenOwner;
         locking = _locking;
@@ -85,12 +84,12 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
 
         address recipient = _balance.recipient;
         if (_msgSender() == recipient) {
-            uint256 toClaim = _balance.value.sub(claimed[recipient], "nothing to claim");
+            uint256 toClaim = _balance.value - claimed[recipient];
             require(toClaim > 0, "nothing to claim");
             claimed[recipient] = _balance.value;
 
             // claim rari tokens
-            uint256 claimAmount = toClaim.mul(claimFormulaClaim).div(CLAIM_FORMULA_DIVIDER);
+            uint256 claimAmount = (toClaim * claimFormulaClaim) / (CLAIM_FORMULA_DIVIDER);
             if (claimAmount > 0) {
                 require(token.transferFrom(tokenOwner, recipient, claimAmount), "transfer to msg sender is not successful");
                 emit Claim(recipient, claimAmount);
@@ -98,7 +97,7 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
             }
 
             // lock some tokens
-            uint256 lockAmount = toClaim.sub(claimAmount);
+            uint256 lockAmount = toClaim - (claimAmount);
             if(lockAmount > 0) {
                 require(token.transferFrom(tokenOwner, address(this), lockAmount), "transfer to RariMine is not successful");
                 require(token.approve(address(locking), lockAmount), "approve is not successful");
@@ -118,7 +117,7 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
         }
     }
 
-    function prepareMessage(Balance memory _balance, address _address) internal pure returns (string memory) {
+    function prepareMessage(Balance memory _balance, address _address) internal view returns (string memory) {
         uint256 id;
         assembly {
             id := chainid()

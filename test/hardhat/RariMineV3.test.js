@@ -225,7 +225,7 @@ contract("RariMineV3", accounts => {
 
 			await truffleAssert.reverts(
 				rariMine.claim(balanceClaimer1, signature.v, signature.r, signature.s, { from: claimer1 }),
-                "ERC20: transfer amount exceeds balance"
+                "ERC20: insufficient allowance"
 			);
 		})
 

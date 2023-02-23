@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.7.6;
+pragma solidity 0.8.17;
 pragma abicoder v2;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
@@ -11,9 +11,6 @@ import "./libs/LibBrokenLine.sol";
 import "./IVotesUpgradeable.sol";
 
 abstract contract LockingBase is OwnableUpgradeable, IVotesUpgradeable {
-    using SafeMathUpgradeable96 for uint96;
-    using SafeMathUpgradeable32 for uint32;
-    
     using LibBrokenLine for LibBrokenLine.BrokenLine;
 
     uint32 constant public WEEK = 50400; //blocks one week = 50400, day = 7200, goerli = 50
@@ -139,7 +136,7 @@ abstract contract LockingBase is OwnableUpgradeable, IVotesUpgradeable {
      */
     event SetStartingPointWeek(uint indexed newStartingPointWeek);
 
-    function __LockingBase_init_unchained(IERC20Upgradeable _token, uint32 _startingPointWeek, uint32 _minCliffPeriod, uint32 _minSlopePeriod) internal initializer {
+    function __LockingBase_init_unchained(IERC20Upgradeable _token, uint32 _startingPointWeek, uint32 _minCliffPeriod, uint32 _minSlopePeriod) internal onlyInitializing {
         token = _token;
         startingPointWeek = _startingPointWeek;
 
@@ -184,24 +181,24 @@ abstract contract LockingBase is OwnableUpgradeable, IVotesUpgradeable {
         require(cliff >= minCliffPeriod, "cliff period < minimal lock period");
         require(slopePeriod >= minSlopePeriod, "slope period < minimal lock period");
 
-        uint96 cliffSide = uint96((cliff - minCliffPeriod)).mul(ST_FORMULA_CLIFF_MULTIPLIER).div(MAX_CLIFF_PERIOD - minCliffPeriod);
-        uint96 slopeSide = uint96((slopePeriod - minSlopePeriod)).mul(ST_FORMULA_SLOPE_MULTIPLIER).div(MAX_SLOPE_PERIOD - minSlopePeriod);
-        uint96 multiplier = cliffSide.add(slopeSide).add(ST_FORMULA_CONST_MULTIPLIER);
+        uint96 cliffSide = (uint96(cliff - minCliffPeriod) * (ST_FORMULA_CLIFF_MULTIPLIER)) / (MAX_CLIFF_PERIOD - minCliffPeriod);
+        uint96 slopeSide = (uint96((slopePeriod - minSlopePeriod)) * (ST_FORMULA_SLOPE_MULTIPLIER)) / (MAX_SLOPE_PERIOD - minSlopePeriod);
+        uint96 multiplier = cliffSide + (slopeSide) + (ST_FORMULA_CONST_MULTIPLIER);
 
-        lockAmount = amount.mul(multiplier).div(ST_FORMULA_DIVIDER);
+        lockAmount = (amount * multiplier) / (ST_FORMULA_DIVIDER);
         lockSlope = divUp(lockAmount, slopePeriod);
     }
 
     function divUp(uint96 a, uint96 b) internal pure returns (uint96) {
-        return ((a.sub(1)).div(b)).add(1);
+        return ((a - 1) / b) + 1;
     }
     
     function roundTimestamp(uint32 ts) view public returns (uint32) {
         if (ts < getEpochShift()) {
             return 0;
         }
-        uint32 shifted = ts.sub(getEpochShift());
-        return shifted.div(WEEK).sub(startingPointWeek);
+        uint32 shifted = ts - (getEpochShift());
+        return shifted / WEEK - (startingPointWeek);
     }
 
     /**

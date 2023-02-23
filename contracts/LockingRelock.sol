@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.7.6;
+pragma solidity 0.8.17;
 pragma abicoder v2;
 
 import "./LockingBase.sol";
 
 abstract contract LockingRelock is LockingBase {
-    using SafeMathUpgradeable96 for uint96;
-    using SafeMathUpgradeable32 for uint32;
-
     using LibBrokenLine for LibBrokenLine.BrokenLine;
 
     function relock(uint id, address newDelegate, uint96 newAmount, uint32 newSlopePeriod, uint32 newCliff) external notStopped notMigrating returns (uint) {
@@ -43,19 +40,19 @@ abstract contract LockingRelock is LockingBase {
         require(newSlopePeriod > 0, "slope period equal 0");
 
         //check Line with new parameters don`t finish earlier than old Line
-        uint32 newEnd = toTime.add(newCliff).add(newSlopePeriod);
+        uint32 newEnd = toTime + (newCliff) + (newSlopePeriod);
         LibBrokenLine.Line memory line = accounts[account].locked.initiatedLines[id];
         uint32 oldSlopePeriod = uint32(divUp(line.bias, line.slope));
-        uint32 oldEnd = line.start.add(line.cliff).add(oldSlopePeriod);
+        uint32 oldEnd = line.start + (line.cliff) + (oldSlopePeriod);
         require(oldEnd <= newEnd, "new line period lock too short");
 
         //check Line with new parameters don`t cut corner old Line
-        uint32 oldCliffEnd = line.start.add(line.cliff);
-        uint32 newCliffEnd = toTime.add(newCliff);
+        uint32 oldCliffEnd = line.start + (line.cliff);
+        uint32 newCliffEnd = toTime + (newCliff);
         if (oldCliffEnd > newCliffEnd) {
-            uint32 balance = oldCliffEnd.sub(newCliffEnd);
+            uint32 balance = oldCliffEnd - (newCliffEnd);
             uint32 newSlope = uint32(divUp(newAmount, newSlopePeriod));
-            uint96 newBias = newAmount.sub(balance.mul(newSlope));
+            uint96 newBias = newAmount - (balance * (newSlope));
             require(newBias >= line.bias, "detect cut deposit corner");
         }
     }
@@ -70,13 +67,13 @@ abstract contract LockingRelock is LockingBase {
 
     function rebalance(uint id, address account, uint96 bias, uint96 residue, uint96 newAmount) internal {
         require(residue <= newAmount, "Impossible to relock: less amount, then now is");
-        uint96 addAmount = newAmount.sub(residue);
+        uint96 addAmount = newAmount - (residue);
         uint96 amount = accounts[account].amount;
-        uint96 balance = amount.sub(bias);
+        uint96 balance = amount - (bias);
         if (addAmount > balance) {
             //need more, than balance, so need transfer tokens to this
-            uint96 transferAmount = addAmount.sub(balance);
-            accounts[account].amount = accounts[account].amount.add(transferAmount);
+            uint96 transferAmount = addAmount - (balance);
+            accounts[account].amount = accounts[account].amount + (transferAmount);
             require(token.transferFrom(locks[id].account, address(this), transferAmount), "transfer failed");
         }
     }
