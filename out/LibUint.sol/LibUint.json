@@ -80,7 +80,7 @@
         5515
       ],
       "SafeMathUpgradeable": [
-        6001
+        32555
       ]
     },
     "nodeType": "SourceUnit",
@@ -105,7 +105,7 @@
         "absolutePath": "node_modules/@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol",
         "file": "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol",
         "scope": 5516,
-        "sourceUnit": 6002,
+        "sourceUnit": 32556,
         "symbolAliases": [],
         "unitAlias": ""
       },
@@ -123,10 +123,10 @@
               "id": 5434,
               "name": "SafeMathUpgradeable",
               "nodeType": "UserDefinedTypeName",
-              "referencedDeclaration": 6001,
+              "referencedDeclaration": 32555,
               "src": "161:19:13",
               "typeDescriptions": {
-                "typeIdentifier": "t_contract$_SafeMathUpgradeable_$6001",
+                "typeIdentifier": "t_contract$_SafeMathUpgradeable_$32555",
                 "typeString": "library SafeMathUpgradeable"
               }
             },
