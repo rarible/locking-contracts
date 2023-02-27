@@ -14,7 +14,7 @@ import "./tasks/deploy";
 dotenv.config();
 
 tdly.setup({
-  automaticVerifications: false,
+  automaticVerifications: true,
 });
 
 function getConfigPath() {
@@ -113,5 +113,10 @@ const config: HardhatUserConfig = {
     excludeContracts: [],
     src: "./contracts",
   },
+  tenderly: { // as before
+    username: "tenderly",
+    project: "locking",
+    privateVerification: false
+  }
 };
 export default config;
