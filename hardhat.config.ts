@@ -1,18 +1,21 @@
 import "@nomicfoundation/hardhat-toolbox";
 import "@nomiclabs/hardhat-truffle5";
 import "@nomicfoundation/hardhat-foundry";
-import { config as dotenvConfig } from "dotenv";
 import type { HardhatUserConfig } from "hardhat/config";
 import "@nomiclabs/hardhat-etherscan";
 import type { HttpNetworkUserConfig } from "hardhat/types";
+import * as tdly from "@tenderly/hardhat-tenderly";
 import * as dotenv from 'dotenv';
 import * as os from 'os';
 import * as path from 'path';
-import { resolve } from "path";
 import 'hardhat-abi-exporter';
 import "./tasks/deploy";
 
 dotenv.config();
+
+tdly.setup({
+  automaticVerifications: false,
+});
 
 function getConfigPath() {
   const configPath = process.env["NETWORK_CONFIG_PATH"];
@@ -87,42 +90,28 @@ const config: HardhatUserConfig = {
       },
     },
   },
-  // etherscan: {
-  //   apiKey: "",
-  // },
-  // abiExporter: {
-  //   path: './abi',
-  //   clear: true,
-  // },
-  // typechain: {
-  //   outDir: './typechain',
-  // },
-  // gasReporter: {
-  //   enabled: !process.env.CI,
-  //   currency: 'USD',
-  //   gasPrice: 50,
-  //   src: 'contracts',
-  //   coinmarketcap: '7643dfc7-a58f-46af-8314-2db32bdd18ba',
-  // },
-  // etherscan: {
-  //   apiKey: {
-  //     mainnet: process.env.ETHERSCAN_API_KEY || "",
-  //     goerli: process.env.ETHERSCAN_API_KEY || "",
-  //     polygon: process.env.POLYGONSCAN_API_KEY || "",
-  //     polygonMumbai: process.env.POLYGONSCAN_API_KEY || "",
-  //     optimism: process.env.OPTIMISM_API_KEY || "",
-  //     optimismGoerli: process.env.OPTIMISM_API_KEY || "",
-  //   },
-  // },
-  // gasReporter: {
-  //   currency: "USD",
-  //   enabled: process.env.REPORT_GAS ? true : false,
-  //   excludeContracts: [],
-  //   src: "./contracts",
-  // },
-  // typechain: {
-  //   outDir: "types",
-  //   target: "ethers-v5",
-  // },
+  abiExporter: {
+    path: './abi',
+    clear: true,
+  },
+  typechain: {
+    outDir: './typechain-types',
+  },
+  etherscan: {
+    apiKey: {
+      mainnet: process.env.ETHERSCAN_API_KEY || "",
+      goerli: process.env.ETHERSCAN_API_KEY || "",
+      polygon: process.env.POLYGONSCAN_API_KEY || "",
+      polygonMumbai: process.env.POLYGONSCAN_API_KEY || "",
+      optimism: process.env.OPTIMISM_API_KEY || "",
+      optimismGoerli: process.env.OPTIMISM_API_KEY || "",
+    },
+  },
+  gasReporter: {
+    currency: "USD",
+    enabled: process.env.REPORT_GAS ? true : false,
+    excludeContracts: [],
+    src: "./contracts",
+  },
 };
 export default config;
