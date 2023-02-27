@@ -9,7 +9,8 @@
     "compile": "npx hardhat clean && npx hardhat compile",
     "test": "npx hardhat test",
     "compile_foundry": "forge build",
-    "test_foundry": "forge test"
+    "test_foundry": "forge test",
+    "deploy": "hardhat deploy:TestERC20 --network goerli"
   },
   "dependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.6",
