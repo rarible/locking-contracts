@@ -6,3 +6,5 @@ forge-cache
 cache_hardhat
 .vscode
 out
+.ethereum
+typechain-types
