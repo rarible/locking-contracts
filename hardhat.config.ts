@@ -1,21 +1,19 @@
 import "@nomicfoundation/hardhat-toolbox";
 import "@nomiclabs/hardhat-truffle5";
 import "@nomicfoundation/hardhat-foundry";
+import "@nomicfoundation/hardhat-toolbox"; 
 import type { HardhatUserConfig } from "hardhat/config";
 import "@nomiclabs/hardhat-etherscan";
 import type { HttpNetworkUserConfig } from "hardhat/types";
-import * as tdly from "@tenderly/hardhat-tenderly";
+import "@tenderly/hardhat-tenderly";
 import * as dotenv from 'dotenv';
 import * as os from 'os';
 import * as path from 'path';
 import 'hardhat-abi-exporter';
 import "./tasks/deploy";
 
-dotenv.config();
 
-tdly.setup({
-  automaticVerifications: true,
-});
+dotenv.config();
 
 function getConfigPath() {
   const configPath = process.env["NETWORK_CONFIG_PATH"];
@@ -95,7 +93,7 @@ const config: HardhatUserConfig = {
     clear: true,
   },
   typechain: {
-    outDir: './typechain-types',
+    outDir: './typechain',
   },
   etherscan: {
     apiKey: {
