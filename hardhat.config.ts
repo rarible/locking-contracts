@@ -11,6 +11,8 @@ import * as os from 'os';
 import * as path from 'path';
 import 'hardhat-abi-exporter';
 import "./tasks/deploy";
+import * as tdly from "@tenderly/hardhat-tenderly";
+tdly.setup();
 
 dotenv.config();
 

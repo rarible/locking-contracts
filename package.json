@@ -10,7 +10,9 @@
     "test": "npx hardhat test",
     "compile_foundry": "forge build",
     "test_foundry": "forge test",
-    "deploy": "hardhat deploy:TestERC20 --network goerli"
+    "deploy": "hardhat deploy:TestERC20 --network goerli",
+    "verify_tenderly": "npx hardhat tenderly:verify TestERC20=0xca0867dd0ffe7c31d7ea3dD99f9f55B32739F2c6 --network goerli --verbose",
+    "verify_etherscan": "npx hardhat verify 0x44Ddcc3667e0b2Dd80E3887Cd7d126c9DD3247E6 --network goerli"
   },
   "dependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.6",

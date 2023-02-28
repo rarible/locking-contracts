@@ -14,9 +14,9 @@ task("deploy:TestERC20", "Upgrade").setAction(async (_, hre) => {
 
   console.log("testERC20: ", testERC20.address);
 
-  const verify =  await spawn("npx", ["hardhat", "verify", "--network", hre.network.name, testERC20.address]);
+//   const verify =  await spawn("npx", ["hardhat", "verify", "--network", hre.network.name, testERC20.address]);
 
-  console.log("verification done", verify);
+//   console.log("verification done", verify);
   // verify
   // npx hardhat verify --network <network> DEPLOYED_CONTRACT_ADDRESS
 
