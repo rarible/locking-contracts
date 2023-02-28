@@ -12,7 +12,6 @@ import * as path from 'path';
 import 'hardhat-abi-exporter';
 import "./tasks/deploy";
 
-
 dotenv.config();
 
 function getConfigPath() {
@@ -32,11 +31,7 @@ function createNetwork(name: string): HttpNetworkUserConfig {
     gas: parseInt(json.gasPrice),
     chainId: parseInt(json.network_id),
     url: json.url,
-    accounts: {
-      count: 10,
-      mnemonic: json.key,
-      path: "m/44'/60'/0'/0",
-    },
+    accounts: [json.key]
   };
 }
 
@@ -48,8 +43,8 @@ const config: HardhatUserConfig = {
     dev: createNetwork("dev"),
     goerli: createNetwork("goerli"),
     mainnet: createNetwork("mainnet"),
-    optimism: createNetwork("optimism_mainnet"),
-    optimismGoerli: createNetwork("optimism_goerli"),
+    optimisticEthereum: createNetwork("optimism_mainnet"),
+    optimisticGoerli: createNetwork("optimism_goerli"),
     polygonDev: createNetwork("polygon_dev"),
     polygonMainnet: createNetwork("polygon_mainnet"),
     polygonMumbai: createNetwork("polygon_mumbai"),
@@ -101,9 +96,9 @@ const config: HardhatUserConfig = {
       goerli: process.env.ETHERSCAN_API_KEY || "",
       polygon: process.env.POLYGONSCAN_API_KEY || "",
       polygonMumbai: process.env.POLYGONSCAN_API_KEY || "",
-      optimism: process.env.OPTIMISM_API_KEY || "",
-      optimismGoerli: process.env.OPTIMISM_API_KEY || "",
-    },
+      optimisticEthereum: process.env.ETHERSCAN_API_KEY || "",
+      optimisticGoerli: process.env.ETHERSCAN_API_KEY || "",
+    }
   },
   gasReporter: {
     currency: "USD",
