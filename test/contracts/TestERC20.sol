@@ -1,5 +1,15 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.9 <0.8.0;
+pragma solidity 0.8.17;
 
-import "@vfadeev/tokens-test/contracts/TestERC20.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+
+contract TestERC20 is ERC20Upgradeable {
+    function mint(address to, uint amount) external {
+        _mint(to, amount);
+    }
+
+    function init() external {
+        __ERC20_init("TestERC20", "TE20");
+    }
+}

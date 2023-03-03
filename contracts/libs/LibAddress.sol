@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.7.6;
+pragma solidity 0.8.17;
 
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 
@@ -8,7 +8,7 @@ library LibAddress {
     using AddressUpgradeable for address;
 
     function toString(address _addr) internal pure returns (string memory) {
-        bytes32 value = bytes32(uint256(_addr));
+        bytes32 value = bytes32(bytes20(uint160(_addr)));
         bytes memory alphabet = "0123456789abcdef";
         bytes memory str = new bytes(42);
         str[0] = '0';

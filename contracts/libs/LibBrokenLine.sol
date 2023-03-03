@@ -1,12 +1,8 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.7.6;
-pragma abicoder v2;
+pragma solidity 0.8.17;
 
-import "@openzeppelin/contracts-upgradeable/math/SignedSafeMathUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
 import "./LibIntMapping.sol";
-
 /**
   * Line describes a linear function, how the user's voice decreases from point (start, bias) with speed slope
   * BrokenLine - a curve that describes the curve of the change in the sum of votes of several users
@@ -16,25 +12,46 @@ import "./LibIntMapping.sol";
   **/
 
 library LibBrokenLine {
-    using SignedSafeMathUpgradeable for int;
-    using SafeMathUpgradeable for uint;
-    using LibIntMapping for mapping(uint => int);
+    using LibIntMapping for mapping(uint => int96);
 
-    struct Line {
+    // OldStructs
+    struct LineOld {
         uint start;
         uint bias;
         uint slope;
     }
 
-    struct LineData {//all data about line
-        Line line;
+    struct LineDataOld {//all data about line
+        LineOld line;
         uint cliff;
     }
 
-    struct BrokenLine {
+    struct BrokenLineOld {
         mapping(uint => int) slopeChanges;          //change of slope applies to the next time point
         mapping(uint => int) biasChanges;           //change of bias applies to the next time point
-        mapping(uint => LineData) initiatedLines;   //initiated (successfully added) Lines
+        mapping(uint => LineDataOld) initiatedLines;   //initiated (successfully added) Lines
+        LineOld initial;
+    }
+    // end of the old structs
+
+    struct Line {
+        uint32 start;
+        uint96 bias;
+        uint96 slope;
+        uint32 cliff;
+    }
+
+    struct Point {
+        uint32 blockNumber;
+        uint96 bias;
+        uint96 slope;
+        uint32 epoch;
+    }
+
+    struct BrokenLine {
+        mapping(uint => int96) slopeChanges;          //change of slope applies to the next time point
+        mapping(uint => Line) initiatedLines;   //initiated (successfully added) Lines
+        Point[] history;
         Line initial;
     }
 
@@ -43,113 +60,125 @@ library LibBrokenLine {
      *      1. slope != 0, slope <= bias
      *      2. line not exists
      **/
-    function add(BrokenLine storage brokenLine, uint id, Line memory line, uint cliff) internal {
+    function _addOneLine(BrokenLine storage brokenLine, uint id, Line memory line) internal {
         require(line.slope != 0, "Slope == 0, unacceptable value for slope");
         require(line.slope <= line.bias, "Slope > bias, unacceptable value for slope");
-        require(brokenLine.initiatedLines[id].line.bias == 0, "Line with given id is already exist");
-        brokenLine.initiatedLines[id] = LineData(line, cliff);
+        require(brokenLine.initiatedLines[id].bias == 0, "Line with given id is already exist");
+        brokenLine.initiatedLines[id] = line;
 
         update(brokenLine, line.start);
-        brokenLine.initial.bias = brokenLine.initial.bias.add(line.bias);
+        brokenLine.initial.bias = brokenLine.initial.bias + (line.bias);
         //save bias for history in line.start minus one
-        uint256 lineStartMinusOne = line.start.sub(1);
-        brokenLine.biasChanges.addToItem(lineStartMinusOne, safeInt(line.bias));
+        uint32 lineStartMinusOne = line.start - 1;
         //period is time without tail
-        uint period = line.bias.div(line.slope);
+        uint32 period = uint32(line.bias / (line.slope));
 
-        if (cliff == 0) {
+        if (line.cliff == 0) {
             //no cliff, need to increase brokenLine.initial.slope write now
-            brokenLine.initial.slope = brokenLine.initial.slope.add(line.slope);
+            brokenLine.initial.slope = brokenLine.initial.slope + (line.slope);
             //no cliff, save slope in history in time minus one
             brokenLine.slopeChanges.addToItem(lineStartMinusOne, safeInt(line.slope));
         } else {
             //cliffEnd finish in lineStart minus one plus cliff
-            uint cliffEnd = lineStartMinusOne.add(cliff);
+            uint32 cliffEnd = lineStartMinusOne + (line.cliff);
             //save slope in history in cliffEnd 
             brokenLine.slopeChanges.addToItem(cliffEnd, safeInt(line.slope));
-            period = period.add(cliff);
+            period = period + (line.cliff);
         }
 
-        int mod = safeInt(line.bias.mod(line.slope));
-        uint256 endPeriod = line.start.add(period);
-        uint256 endPeriodMinus1 = endPeriod.sub(1);
-        brokenLine.slopeChanges.subFromItem(endPeriodMinus1, safeInt(line.slope).sub(mod));
+        int96 mod = safeInt(line.bias % (line.slope));
+        uint32 endPeriod = line.start + (period);
+        uint32 endPeriodMinus1 = endPeriod - 1;
+        brokenLine.slopeChanges.subFromItem(endPeriodMinus1, safeInt(line.slope) - (mod));
         brokenLine.slopeChanges.subFromItem(endPeriod, mod);
+    }
+
+    /**
+     * @dev adding a line and saving snapshot
+     */
+    function addOneLine(BrokenLine storage brokenLine, uint id, Line memory line, uint32 blockNumber) internal {
+        _addOneLine(brokenLine, id, line);
+        saveSnapshot(brokenLine, line.start, blockNumber);
     }
 
     /**
      * @dev Remove Line from BrokenLine, return bias, slope, cliff. Run update BrokenLine.
      **/
-    function remove(BrokenLine storage brokenLine, uint id, uint toTime) internal returns (uint bias, uint slope, uint cliff) {
-        LineData memory lineData = brokenLine.initiatedLines[id];
-        require(lineData.line.bias != 0, "Removing Line, which not exists");
-        Line memory line = lineData.line;
+    function _remove(BrokenLine storage brokenLine, uint id, uint32 toTime) internal returns (uint96 bias, uint96 slope, uint32 cliff) {
+        Line memory line = brokenLine.initiatedLines[id];
+        require(line.bias != 0, "Removing Line, which not exists");
 
         update(brokenLine, toTime);
         //check time Line is over
         bias = line.bias;
         slope = line.slope;
         cliff = 0;
-        //for information: bias.div(slope) - this`s period while slope works
-        uint finishTime = line.start.add(bias.div(slope)).add(lineData.cliff);
+        //for information: bias / (slope) - this`s period while slope works
+        uint32 finishTime = line.start + (uint32(bias / (slope))) + (line.cliff);
         if (toTime > finishTime) {
             bias = 0;
             slope = 0;
             return (bias, slope, cliff);
         }
-        uint finishTimeMinusOne = finishTime.sub(1);
-        uint toTimeMinusOne = toTime.sub(1);
-        int mod = safeInt(bias.mod(slope));
-        uint cliffEnd = line.start.add(lineData.cliff).sub(1);
+        uint32 finishTimeMinusOne = finishTime - 1;
+        uint32 toTimeMinusOne = toTime - 1;
+        int96 mod = safeInt(bias % slope);
+        uint32 cliffEnd = line.start + (line.cliff) - 1;
         if (toTime <= cliffEnd) {//cliff works
-            cliff = cliffEnd.sub(toTime).add(1);
+            cliff = cliffEnd - (toTime) + 1;
             //in cliff finish time compensate change slope by oldLine.slope
             brokenLine.slopeChanges.subFromItem(cliffEnd, safeInt(slope));
             //in new Line finish point use oldLine.slope
-            brokenLine.slopeChanges.addToItem(finishTimeMinusOne, safeInt(slope).sub(mod));
+            brokenLine.slopeChanges.addToItem(finishTimeMinusOne, safeInt(slope) - (mod));
         } else if (toTime <= finishTimeMinusOne) {//slope works
             //now compensate change slope by oldLine.slope
-            brokenLine.initial.slope = brokenLine.initial.slope.sub(slope);
+            brokenLine.initial.slope = brokenLine.initial.slope - (slope);
             //in new Line finish point use oldLine.slope
-            brokenLine.slopeChanges.addToItem(finishTimeMinusOne, safeInt(slope).sub(mod));
-            bias = finishTime.sub(toTime).mul(slope).add(uint(mod));
+            brokenLine.slopeChanges.addToItem(finishTimeMinusOne, safeInt(slope) - (mod));
+            bias = (uint96(finishTime - (toTime)) * slope) + (uint96(mod));
             //save slope for history
             brokenLine.slopeChanges.subFromItem(toTimeMinusOne, safeInt(slope));
         } else {//tail works
             //now compensate change slope by tail
-            brokenLine.initial.slope = brokenLine.initial.slope.sub(uint(mod));
-            bias = uint(mod);
+            brokenLine.initial.slope = brokenLine.initial.slope - (uint96(mod));
+            bias = uint96(mod);
             slope = bias;
             //save slope for history
             brokenLine.slopeChanges.subFromItem(toTimeMinusOne, safeInt(slope));
         }
         brokenLine.slopeChanges.addToItem(finishTime, mod);
-        brokenLine.initial.bias = brokenLine.initial.bias.sub(bias);
-        brokenLine.initiatedLines[id].line.bias = 0;
-        //save bias for history
-        brokenLine.biasChanges.subFromItem(toTimeMinusOne, safeInt(bias));
+        brokenLine.initial.bias = brokenLine.initial.bias - (bias);
+        brokenLine.initiatedLines[id].bias = 0;
+    }
+
+    /**
+     * @dev removing a line and saving snapshot
+     */
+    function remove(BrokenLine storage brokenLine, uint id, uint32 toTime, uint32 blockNumber) internal returns (uint96 bias, uint96 slope, uint32 cliff) {
+        (bias, slope, cliff) = _remove(brokenLine, id, toTime);
+        saveSnapshot(brokenLine, toTime, blockNumber);
     }
 
     /**
      * @dev Update initial Line by parameter toTime. Calculate and set all changes
      **/
-    function update(BrokenLine storage brokenLine, uint toTime) internal {
-        uint time = brokenLine.initial.start;
+    function update(BrokenLine storage brokenLine, uint32 toTime) internal {
+        uint32 time = brokenLine.initial.start;
         if (time == toTime) {
             return;
         }
-        uint slope = brokenLine.initial.slope;
-        uint bias = brokenLine.initial.bias;
+        uint96 slope = brokenLine.initial.slope;
+        uint96 bias = brokenLine.initial.bias;
         if (bias != 0) {
             require(toTime > time, "can't update BrokenLine for past time");
             while (time < toTime) {
-                bias = bias.sub(slope);
+                bias = bias - (slope);
 
-                int newSlope = safeInt(slope).add(brokenLine.slopeChanges[time]);
+                int96 newSlope = safeInt(slope) + (brokenLine.slopeChanges[time]);
                 require(newSlope >= 0, "slope < 0, something wrong with slope");
-                slope = uint(newSlope);
+                slope = uint96(newSlope);
 
-                time = time.add(1);
+                time = time + 1;
             }
         }
         brokenLine.initial.start = toTime;
@@ -157,61 +186,78 @@ library LibBrokenLine {
         brokenLine.initial.slope = slope;
     }
 
-    function actualValue(BrokenLine storage brokenLine, uint toTime) internal view returns (uint) {
-        uint fromTime = brokenLine.initial.start;
-        uint bias = brokenLine.initial.bias;
+    function actualValue(BrokenLine storage brokenLine, uint32 toTime, uint32 toBlock) internal view returns (uint96) {
+        uint32 fromTime = brokenLine.initial.start;
         if (fromTime == toTime) {
-            return (bias);
+            if (brokenLine.history[brokenLine.history.length - 1].blockNumber < toBlock) {
+                return (brokenLine.initial.bias);
+            } else {
+                return actualValueBack(brokenLine, toTime, toBlock);
+            }
         }
-
         if (toTime > fromTime) {
-            return actualValueForward(brokenLine, fromTime, toTime, bias);
+            return actualValueForward(brokenLine, fromTime, toTime, brokenLine.initial.bias, brokenLine.initial.slope, toBlock);
         }
-        require(toTime > 0, "unexpected past time");
-        return actualValueBack(brokenLine, fromTime, toTime, bias);
+        return actualValueBack(brokenLine, toTime, toBlock);
     }
 
-    function actualValueForward(BrokenLine storage brokenLine, uint fromTime, uint toTime, uint bias) internal view returns (uint) {
+    function actualValueForward(BrokenLine storage brokenLine, uint32 fromTime, uint32 toTime, uint96 bias, uint96 slope, uint32 toBlock) internal view returns (uint96) {
         if ((bias == 0)){
             return (bias);
         }
-        uint slope = brokenLine.initial.slope;
-        uint time = fromTime;
+        uint32 time = fromTime;
 
         while (time < toTime) {
-            bias = bias.sub(slope);
+            bias = bias - (slope);
 
-            int newSlope = safeInt(slope).add(brokenLine.slopeChanges[time]);
+            int96 newSlope = safeInt(slope) + (brokenLine.slopeChanges[time]);
             require(newSlope >= 0, "slope < 0, something wrong with slope");
-            slope = uint(newSlope);
+            slope = uint96(newSlope);
 
-            time = time.add(1);
+            time = time + 1;
         }
         return bias;
     }
 
-    function actualValueBack(BrokenLine storage brokenLine, uint fromTime, uint toTime, uint bias) internal view returns (uint) {
-        uint slope = brokenLine.initial.slope;
-        uint time = fromTime;
+    function actualValueBack(BrokenLine storage brokenLine, uint32 toTime, uint32 toBlock) internal view returns (uint96) {
+        (uint96 bias, uint96 slope, uint32 fromTime) = binarySearch(brokenLine.history, toBlock);
+        return actualValueForward(brokenLine, fromTime, toTime, bias, slope, toBlock);
+    }
 
-        while (time > toTime) {
-            time = time.sub(1);
+    function safeInt(uint96 value) pure internal returns (int96 result) {
+        require(value < 2**95, "int cast error");
+        result = int96(value);
+    }
 
-            int newBias = safeInt(bias).sub(brokenLine.biasChanges[time]);
-            require(newBias >= 0, "bias < 0, something wrong with bias");
-            bias = uint(newBias);
+    function saveSnapshot(BrokenLine storage brokenLine, uint32 epoch, uint32 blockNumber) internal {
+        brokenLine.history.push(Point({
+            blockNumber: blockNumber,
+            bias: brokenLine.initial.bias,
+            slope: brokenLine.initial.slope,
+            epoch: epoch
+        }));
+    }
 
-            int newSlope = safeInt(slope).sub(brokenLine.slopeChanges[time]);
-            require(newSlope >= 0, "slope < 0, something wrong with slope");
-            slope = uint(newSlope);
-
-            bias = bias.add(slope);
+    function binarySearch(Point[] memory history, uint32 toBlock) internal pure returns(uint96, uint96, uint32) {
+        uint len = history.length;
+        if (len == 0 || history[0].blockNumber > toBlock) {
+            return (0,0,0);
         }
-        return bias;
+        uint min = 0;
+        uint max = len - 1;
+        
+        for (uint i = 0; i < 128; i++) {
+            if (min >= max) {
+                break;
+            }
+            uint mid = (min + max + 1) / 2;
+            if (history[mid].blockNumber <= toBlock) {
+                min = mid; 
+            } else {
+                max = mid - 1;
+            }
+        }
+        return (history[min].bias, history[min].slope, history[min].epoch);
     }
 
-    function safeInt(uint value) pure internal returns (int result) {
-        require(value < 2**255, "int cast error");
-        result = int(value);
-    }
 }

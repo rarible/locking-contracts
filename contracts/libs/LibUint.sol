@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity 0.7.6;
-
-import "@openzeppelin/contracts-upgradeable/math/SafeMathUpgradeable.sol";
+pragma solidity 0.8.17;
 
 library LibUint {
-    using SafeMathUpgradeable for uint256;
 
     function toString(uint256 _i) internal pure returns (string memory) {
         if (_i == 0) {
@@ -18,9 +15,10 @@ library LibUint {
             j /= 10;
         }
         bytes memory bstr = new bytes(len);
-        uint k = len - 1;
+        uint k = len;
         while (_i != 0) {
-            bstr[k--] = byte(uint8(48 + _i % 10));
+            --k;
+            bstr[k] = bytes1(uint8(48 + _i % 10));
             _i /= 10;
         }
         return string(bstr);

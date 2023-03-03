@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.7.0;
-pragma abicoder v2;
+pragma solidity ^0.8.0;
 
 contract LibEncoderTest {
 
@@ -10,7 +9,7 @@ contract LibEncoderTest {
         uint256 value;
     }
 
-    function encodeAbi(Balance memory _balance, address _address, uint8 _version) external pure returns (bytes memory) {
+    function encodeAbi(Balance memory _balance, address _address, uint8 _version) external view returns (bytes memory) {
         uint256 id;
         assembly {
             id := chainid()
@@ -32,7 +31,7 @@ contract LibEncoderTest {
         return string(str);
     }
 
-    function prepareMessage(Balance memory _balance, address _address, uint8 _version) external pure returns (string memory) {
+    function prepareMessage(Balance memory _balance, address _address, uint8 _version) external view returns (string memory) {
         uint256 id;
         assembly {
             id := chainid()

@@ -1,17 +1,14 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity ^0.7.0;
-
-import "@openzeppelin/contracts-upgradeable/math/SignedSafeMathUpgradeable.sol";
+pragma solidity ^0.8.17;
 
 library LibIntMapping {
-    using SignedSafeMathUpgradeable for int;
 
-    function addToItem(mapping(uint => int) storage map, uint key, int value) internal {
-        map[key] = map[key].add(value);
+    function addToItem(mapping(uint => int96) storage map, uint key, int96 value) internal {
+        map[key] = map[key] + (value);
     }
 
-    function subFromItem(mapping(uint => int) storage map, uint key, int value) internal {
-        map[key] = map[key].sub(value);
+    function subFromItem(mapping(uint => int96) storage map, uint key, int96 value) internal {
+        map[key] = map[key] - (value);
     }
 }

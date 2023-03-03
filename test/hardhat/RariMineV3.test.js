@@ -1,21 +1,19 @@
 const RariMineV3 = artifacts.require("RariMineV3.sol");
 const ERC20 = artifacts.require("TestERC20.sol");
 const TestLocking = artifacts.require("TestLocking.sol");
-const LibSignatureTest = artifacts.require("LibSignatureTest.sol");
 const LibEncoderTest = artifacts.require("LibEncoderTest.sol");
 const keccak256 = require('keccak256')
 
 // "1c8aff950685c2ed4bc3174f3472287b56d9517b9c948127319a09a7a36deac8"
 const { expectThrow } = require("@daonomic/tests-common");
 const truffleAssert = require('truffle-assertions');
-const { signPersonalMessage } = require("../scripts/sign.js");
+const { signPersonalMessage } = require("../../scripts/sign.js");
 // const web3 = require('web3');
 
 contract("RariMineV3", accounts => {
     let rariMine;
     let token;
     let locking;
-    let libSignature;
     let libEncoder;
     let tokenOwner;
     let claimer1;
@@ -38,7 +36,6 @@ contract("RariMineV3", accounts => {
         signer = accounts[4];
         token = await ERC20.new();
         locking = await TestLocking.new();
-        libSignature = await LibSignatureTest.new();
         libEncoder = await LibEncoderTest.new();
         
         await locking.__Locking_init(token.address, 0, 0, 0); //initialize, set owner
@@ -228,7 +225,7 @@ contract("RariMineV3", accounts => {
 
 			await truffleAssert.reverts(
 				rariMine.claim(balanceClaimer1, signature.v, signature.r, signature.s, { from: claimer1 }),
-                "ERC20: transfer amount exceeds balance"
+                "ERC20: insufficient allowance"
 			);
 		})
 
