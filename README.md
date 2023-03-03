@@ -10,6 +10,14 @@ Lock balance behaves pretty much the same way, but initial `bias` is multiplied 
 
 This contract is based on [LibBrokenLine](./contracts/libs/LibBrokenLine.md).
 
+Deployed on mainnet 0x096Bd9a7a2e703670088C05035e23c7a9F428496
+### Installation
+ - Foundry installed globally
+ - yarn install
+
+### Test
+  - yarn test
+
 ### Features
 
 ### Functions supported for every user:
