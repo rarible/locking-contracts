@@ -1,0 +1,10 @@
+node_modules
+artifacts
+cache
+.env
+forge-cache
+cache_hardhat
+.vscode
+out
+.ethereum
+typechain
