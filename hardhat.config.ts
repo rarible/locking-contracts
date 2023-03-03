@@ -41,6 +41,10 @@ const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
   networks: {
     hardhat: {
+      forking: {
+        url: "https://mainnet.infura.io/v3/23aeda901f4249e096e584b8be409743"
+      },
+      blockGasLimit: 300000000,
     },
     dev: createNetwork("dev"),
     goerli: createNetwork("goerli"),
@@ -52,6 +56,9 @@ const config: HardhatUserConfig = {
     polygonMumbai: createNetwork("polygon_mumbai"),
     polygonStaging: createNetwork("polygon_staging"),
     staging: createNetwork("staging"),
+  },
+  mocha: {
+    timeout: 1000000000000
   },
   paths: {
     sources: "./contracts",
