@@ -1,11 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-/**
- *Submitted for verification at Etherscan.io on 2020-07-20
- */
-
 pragma solidity 0.8.17;
-pragma abicoder v2;
 
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";

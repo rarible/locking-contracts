@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity 0.8.17;
-pragma abicoder v2;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
@@ -46,17 +45,17 @@ abstract contract LockingBase is OwnableUpgradeable, IVotesUpgradeable {
      * @dev minimal cliff period in weeks, minCliffPeriod < MAX_CLIFF_PERIOD
      */
 
-    uint32 public minCliffPeriod;
+    uint public minCliffPeriod;
 
     /**
      * @dev minimal slope period in weeks, minSlopePeriod < MAX_SLOPE_PERIOD
      */
-    uint32 public minSlopePeriod;
+    uint public minSlopePeriod;
 
     /**
      * @dev locking epoch start in weeks
      */
-    uint32 public startingPointWeek;
+    uint public startingPointWeek;
 
     /**
      * @dev represents one user Lock
@@ -73,14 +72,14 @@ abstract contract LockingBase is OwnableUpgradeable, IVotesUpgradeable {
      *      amount - total currently locked tokens (including tokens which can be withdrawed)
      */
     struct AccountOld {
-        LibBrokenLine.BrokenLine balance;
-        LibBrokenLine.BrokenLine locked;
+        LibBrokenLine.BrokenLineOld balance;
+        LibBrokenLine.BrokenLineOld locked;
         uint amount;
     }
 
     mapping(address => AccountOld) accountsOld;
     mapping(uint => Lock) locks;
-    LibBrokenLine.BrokenLine public totalSupplyLineOld;
+    LibBrokenLine.BrokenLineOld public totalSupplyLineOld;
 
     struct Account {
         LibBrokenLine.BrokenLine balance;
@@ -181,8 +180,8 @@ abstract contract LockingBase is OwnableUpgradeable, IVotesUpgradeable {
         require(cliff >= minCliffPeriod, "cliff period < minimal lock period");
         require(slopePeriod >= minSlopePeriod, "slope period < minimal lock period");
 
-        uint96 cliffSide = (uint96(cliff - minCliffPeriod) * (ST_FORMULA_CLIFF_MULTIPLIER)) / (MAX_CLIFF_PERIOD - minCliffPeriod);
-        uint96 slopeSide = (uint96((slopePeriod - minSlopePeriod)) * (ST_FORMULA_SLOPE_MULTIPLIER)) / (MAX_SLOPE_PERIOD - minSlopePeriod);
+        uint96 cliffSide = (uint96(cliff - uint32(minCliffPeriod)) * (ST_FORMULA_CLIFF_MULTIPLIER)) / (MAX_CLIFF_PERIOD - uint32(minCliffPeriod));
+        uint96 slopeSide = (uint96((slopePeriod - uint32(minSlopePeriod))) * (ST_FORMULA_SLOPE_MULTIPLIER)) / (MAX_SLOPE_PERIOD - uint32(minSlopePeriod));
         uint96 multiplier = cliffSide + (slopeSide) + (ST_FORMULA_CONST_MULTIPLIER);
 
         lockAmount = (amount * multiplier) / (ST_FORMULA_DIVIDER);
@@ -198,7 +197,7 @@ abstract contract LockingBase is OwnableUpgradeable, IVotesUpgradeable {
             return 0;
         }
         uint32 shifted = ts - (getEpochShift());
-        return shifted / WEEK - (startingPointWeek);
+        return shifted / WEEK - uint32(startingPointWeek);
     }
 
     /**

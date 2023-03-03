@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity 0.8.17;
-pragma abicoder v2;
 
 import "./LibIntMapping.sol";
 /**
@@ -23,7 +22,7 @@ library LibBrokenLine {
     }
 
     struct LineDataOld {//all data about line
-        Line line;
+        LineOld line;
         uint cliff;
     }
 
@@ -31,7 +30,7 @@ library LibBrokenLine {
         mapping(uint => int) slopeChanges;          //change of slope applies to the next time point
         mapping(uint => int) biasChanges;           //change of bias applies to the next time point
         mapping(uint => LineDataOld) initiatedLines;   //initiated (successfully added) Lines
-        Line initial;
+        LineOld initial;
     }
     // end of the old structs
 
@@ -260,7 +259,5 @@ library LibBrokenLine {
         }
         return (history[min].bias, history[min].slope, history[min].epoch);
     }
-
-    
 
 }
