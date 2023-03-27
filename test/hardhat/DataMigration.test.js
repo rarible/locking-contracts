@@ -1,34 +1,20 @@
-const ERC20 = artifacts.require("TestERC20.sol");
-const TestNewLocking = artifacts.require("TestNewLocking.sol");
-const Locking = artifacts.require("Locking.sol");
+const TestMigrationLocking = artifacts.require("TestMigrationLocking.sol");
+
 const ProxyAdmin = artifacts.require("ProxyAdmin.sol");
-const TransparentUpgradeableProxy = artifacts.require("TransparentUpgradeableProxy.sol");
-
-const TestNewLockingNoInterface = artifacts.require("TestNewLockingNoInteface.sol");
-
-const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
-
-const truffleAssert = require('truffle-assertions');
-const { expectThrow } = require("@daonomic/tests-common");
-const { assertStorageUpgradeSafe } = require('@openzeppelin/upgrades-core');
-const { network } = require('hardhat');
+const { network, upgrades } = require('hardhat');
 require('dotenv').config();
 
 const zeroAddress = "0x0000000000000000000000000000000000000000";
 
+
 contract("Locking", accounts => {
-  let locking;
-  let lockingProxy;
   let proxyAdmin;
 
   const lockingProd = "0x096Bd9a7a2e703670088C05035e23c7a9F428496"
-  const impl = "0x51c37534Ef4bB272caC10AB596ae843F786fD793"
   const deployer = "0x20b9049c69DeA7e5d46De82cE0b33A9D5a8a0893"
   const proxyAdmingAddr = "0x80033c932904E077e55a6E43E5E9a796f34d2525"
 
   beforeEach(async () => {
-    locking = await Locking.at(lockingProd);
-    lockingProxy = await TransparentUpgradeableProxy.at(lockingProd)
     proxyAdmin = await ProxyAdmin.at(proxyAdmingAddr)
   })
 
@@ -40,68 +26,46 @@ contract("Locking", accounts => {
         impersonatedSigner.address,
         "0x3635C9ADC5DEA000000000000000000000000000000",
       ]);
-      console.log("!!!!old!:")
+      
+      const LockingFactory = await ethers.getContractFactory("TestMigrationLocking");
+
+      const locking = await LockingFactory.attach(lockingProd)
       const counter = (await locking.counter()).toNumber()
-      console.log(counter)
 
-      let result = {}
-      for (let user of users){
-        if (!!!result[user]){
-          result[user] = {}
-        }
-        const getVotes = await locking.getVotes(user);
-        const amount = await locking.locked(user);
-        const getAvailableForWithdraw = await locking.getAvailableForWithdraw(user)
-        result[user].getVotes = getVotes.toString()
-        result[user].amount = amount.toString()
-        result[user].getAvailableForWithdraw = getAvailableForWithdraw.toString()
+      await locking.connect(impersonatedSigner).stop();
+      console.log(`set stopped = ${await locking.stopped()}`)
 
-        //console.dir(result, {depth: null})
-      }
-
-      console.dir(result, {depth: null})
-
+      //await upgrades.upgradeProxy(lockingProd, LockingFactory);
       //updating locking
-      const newLocking = await Locking.new({ from: impersonatedSigner.address });
+      const newLocking = await TestMigrationLocking.new({ from: impersonatedSigner.address });
       await proxyAdmin.upgrade(locking.address, newLocking.address, { from: impersonatedSigner.address })
 
-      console.log("!!!!new!:")
-      console.log((await locking.counter()).toString())
-      console.log(await locking.totalSupplyLineOld())
+      //migrating balance lines
+      const tx = await locking.connect(impersonatedSigner).migrateBalanceLines(balance);
+      //console.log(tx)
+      console.log("done migrating balance lines")
 
-      /*
-      let result = {};
+      //migrating locked lines
+      await locking.connect(impersonatedSigner).migrateLockedLines(locked);
+      console.log("done migrating locked lines")
+
+      //copy amounts and make snapshots part1
+      await locking.connect(impersonatedSigner).copyAmountMakeSnapshots(users1)
+      console.log("done copying amounts and making snapshots part 1")
+
+      //copy amounts and make snapshots part2
+      await locking.connect(impersonatedSigner).copyAmountMakeSnapshots(users2)
+      console.log("done copying amounts and making snapshots part 2")
+
+      await locking.connect(impersonatedSigner).start();
+      console.log(`set stopped = ${await locking.stopped()}`)
+      console.log(`migration finished`)
+      
       for (let i = 1; i <= counter; i++){
-        const data = await locking.isRelevant(i);
-        
-        if (data[0] === true) {
-          const start = data[1].toNumber();
-          if (!!!result[start]){
-            result[start] = []
-          }
-          result[start].push(i)
-        }
-        if (i % 50 == 0) {
-          console.dir(result, {depth: null})
-          console.log(`done ${i}`)
-        }
+        const result = await locking.isLineCopiedCorrectly(i);
+        assert.equal(result, true, "line " + i)
       }
-      console.dir(result, {depth: null})
-      */
 
-      /*
-
-      const tx1 = await locking.migrateBalanceLines(balance, { from: impersonatedSigner.address })
-      console.log(tx1.receipt.gasUsed)
-
-      const tx2 = await locking.migrateLockedLines(locked, { from: impersonatedSigner.address })
-      console.log(tx2.receipt.gasUsed)
-
-      const tx3 = await locking.copyAmountMakeSnapshots(users, { from: impersonatedSigner.address })
-      console.log(tx3.receipt.gasUsed)
-
-      console.log(tx1.receipt.gasUsed, tx2.receipt.gasUsed, tx3.receipt.gasUsed)
-      */
     });
 
   })
@@ -129,7 +93,8 @@ contract("Locking", accounts => {
     761, 762, 763,
     764, 765, 766, 767, 768, 769, 770, 771, 772,
     773, 774, 775,
-    776, 777, 778, 538, 686, 779, 780, 781, 782, 783, 784, 785, 786, 787
+    776, 777, 778, 538, 686, 779, 780, 781, 782, 783, 784, 785, 786, 787,
+    788, 789, 790, 791, 792
   ]
 
   const locked = [3, 6, 7, 9, 10, 13, 15, 16, 19, 20, 21, 22, 24, 35, 37,
@@ -159,10 +124,11 @@ contract("Locking", accounts => {
     762, 763, 764,
     765, 766, 767, 768, 769, 770, 771, 772,
     773, 774, 775,
-    776, 777, 778, 779, 780, 781, 782, 783, 784, 785, 786, 787
+    776, 777, 778, 779, 780, 781, 782, 783, 784, 785, 786, 787,
+    788, 789, 790, 791, 792
   ]
 
-  const users = [
+  const users1 = [
     '0x3f46680099cF623163C96747a8ADdB85a1dA1Cd1',
     '0x4D99a750324AD91F6f3418b890b2D365b7B2DD6A',
     '0x477E1398B71238f0AEC7a583323719076E788462',
@@ -387,6 +353,10 @@ contract("Locking", accounts => {
     '0x0CCfA1c3441F3fEbDcEE067bd1Cbe3af7BBB614b',
     '0xA6A97c1e6f99C64579d2E576c0C3af4304EE314d',
     '0xC850191CAD9b9B9a1d7eab22Fa441f5Ee3A47180',
+    
+  ]
+  
+  const users2 = [
     '0x6eD14BbE16eBcfCA09762357530000Ba64a77372',
     '0xF29c6918459339Ce1d152F84Fb271652956C5c5F',
     '0x29323644B5540D20e834578943A2Bd91027699B1',
@@ -632,6 +602,12 @@ contract("Locking", accounts => {
     '0xd9104EcDa38fe8b83D85e64B2E53904A8D0D1EdA',
     '0xe0F6417b9084754bACE2B2025D236Da3B596ee1b',
     '0xC16a101973403a71A1d42fdc12fED3C5F45E5BfE',
+    '0x8bace3A49A375027868CDd34e84521EeD1f1B01D',
+    '0x7904DAcA8A08530E9ABF17A4D8e730e2c612c01E',
+    '0x4E2C46063B4AAdcB24AdF784172Db6f043a77D95',
+    '0x3984F87c98Aa60e2742a59Efd99886966A4b1A6A',
+    '0x40b3e336DC1A19C169172D59152BdB1D62F8E690',
   ]
+
 
 })

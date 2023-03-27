@@ -280,15 +280,6 @@ abstract contract LockingBase is OwnableUpgradeable, IVotesUpgradeable {
         updateTotalSupplyLine(time);
     }
 
-    function isLineRelevant(Lock storage lock, uint id, uint32 currentEpoch) internal view returns (bool) {
-        LibBrokenLine.LineDataOld storage oldLine = accountsOld[lock.account].locked.initiatedLines[id];
-
-        //line adds at time start + cliff + slopePeriod + 1(mod)
-        uint finishTime = oldLine.line.start + oldLine.cliff + (oldLine.line.bias / oldLine.line.slope) + 1;
-
-        return ((finishTime < currentEpoch) ? false : true);
-    }
-
     function migrateBalanceLines(uint[] calldata ids) external onlyOwner {
         uint len = ids.length;
         for (uint i = 0; i < len; i++) {
@@ -331,19 +322,6 @@ abstract contract LockingBase is OwnableUpgradeable, IVotesUpgradeable {
         }
     }
 
-    function isRelevant(uint id) external view returns(bool, uint) {
-        uint32 currentBlock = getBlockNumber();
-        uint32 currentEpoch = roundTimestamp(currentBlock);
-
-        Lock storage lock = locks[id];
-
-        LibBrokenLine.LineDataOld storage oldLine = accountsOld[lock.delegate].balance.initiatedLines[id];
-
-        //line adds at time start + cliff + slopePeriod + 1(mod)
-        uint finishTime = oldLine.line.start + oldLine.cliff + (oldLine.line.bias / oldLine.line.slope) + 1;
-
-        return ((finishTime < currentEpoch) ? false : true, oldLine.line.start);
-    }
 
     function copyAmountMakeSnapshots(address[] calldata users) external onlyOwner {
         uint32 currentBlock = getBlockNumber();
@@ -371,7 +349,7 @@ abstract contract LockingBase is OwnableUpgradeable, IVotesUpgradeable {
 
     }
 
-    //48 => 43 add new accounts and totallSupplyLine
+    //48 => 43 add new accounts and totalSupplyLine
     uint256[43] private __gap;
 
 }
