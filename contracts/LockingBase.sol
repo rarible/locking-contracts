@@ -183,8 +183,9 @@ abstract contract LockingBase is OwnableUpgradeable, IVotesUpgradeable {
         uint96 cliffSide = (uint96(cliff - uint32(minCliffPeriod)) * (ST_FORMULA_CLIFF_MULTIPLIER)) / (MAX_CLIFF_PERIOD - uint32(minCliffPeriod));
         uint96 slopeSide = (uint96((slopePeriod - uint32(minSlopePeriod))) * (ST_FORMULA_SLOPE_MULTIPLIER)) / (MAX_SLOPE_PERIOD - uint32(minSlopePeriod));
         uint96 multiplier = cliffSide + (slopeSide) + (ST_FORMULA_CONST_MULTIPLIER);
-
-        lockAmount = (amount * multiplier) / (ST_FORMULA_DIVIDER);
+        
+        uint256 amountMultiplied = uint256(amount) * uint256(multiplier);
+        lockAmount = uint96(amountMultiplied / (ST_FORMULA_DIVIDER));
         lockSlope = divUp(lockAmount, slopePeriod);
     }
 
