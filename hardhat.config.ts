@@ -14,6 +14,7 @@ import "./tasks/deploy";
 import "hardhat-gas-reporter";
 import '@openzeppelin/hardhat-upgrades';
 import * as tdly from "@tenderly/hardhat-tenderly";
+import "hardhat-gas-reporter";
 tdly.setup();
 
 dotenv.config();
