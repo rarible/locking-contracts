@@ -13,6 +13,7 @@ import 'hardhat-abi-exporter';
 import "./tasks/deploy";
 import "hardhat-gas-reporter";
 import * as tdly from "@tenderly/hardhat-tenderly";
+import "hardhat-gas-reporter";
 tdly.setup();
 
 dotenv.config();
