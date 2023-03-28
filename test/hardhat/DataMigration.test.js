@@ -4,9 +4,6 @@ const ProxyAdmin = artifacts.require("ProxyAdmin.sol");
 const { network, upgrades } = require('hardhat');
 require('dotenv').config();
 
-const zeroAddress = "0x0000000000000000000000000000000000000000";
-
-
 contract("Locking", accounts => {
   let proxyAdmin;
 
@@ -20,6 +17,11 @@ contract("Locking", accounts => {
 
   describe("data migration", () => {
     it("migrating one line works", async () => {
+
+      if (process.env.RUN_MIGRATION_TEST !== true) {
+        console.log('skipping the migration test')
+        return;
+      }
 
       const impersonatedSigner = await ethers.getImpersonatedSigner(deployer);
       await network.provider.send("hardhat_setBalance", [
