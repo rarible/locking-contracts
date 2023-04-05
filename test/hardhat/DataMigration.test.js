@@ -17,8 +17,7 @@ contract("Locking", accounts => {
 
   describe("data migration", () => {
     it("migrating one line works", async () => {
-
-      if (process.env.RUN_MIGRATION_TEST !== true) {
+      if (process.env.RUN_MIGRATION_TEST !== "true") {
         console.log('skipping the migration test')
         return;
       }
