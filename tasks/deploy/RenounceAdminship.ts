@@ -1,4 +1,5 @@
-import { ethers, network, upgrades } from "hardhat";
+import { task } from "hardhat/config";
+import { Locking__factory, Locking } from "../../typechain";
 
 type NetworkSettings = {
   timelock: string;
@@ -12,7 +13,6 @@ type Settings = {
   goerli: NetworkSettings;
   default: NetworkSettings;
 }
-
 
 const mainnet: NetworkSettings = {
 	timelock: "0x7e9c956e3EFA81Ace71905Ff0dAEf1A71f42CBC5",
@@ -49,34 +49,34 @@ function getSettings(network: string) : NetworkSettings {
 	}
 } 
 
-async function main() {
-  console.log(`deploying Locking on network ${network.name}`)
+task("deploy:Locking", "Upgrade").setAction(async (_, hre) => {
+  console.log(`deploying Locking on network ${hre.network.name}`)
 
-  const [deployer] = await ethers.getSigners();
+  const [deployer] = await hre.ethers.getSigners();
 
-  const set = getSettings(network.name);
+  const set = getSettings(hre.network.name);
   console.log("settings:", set)
 
   console.log("Deploying contracts with the account:", deployer.address);
   
   //changing owner of locking to timelock
-  const Locking = await ethers.getContractFactory("Locking");
+  const Locking = await hre.ethers.getContractFactory("Locking") as Locking__factory;
   const locking = await Locking.attach(set.lockingAddress)
   await changeOwner(locking, set.timelock, "locking")
 
   //changing owner of rariMineV3 to timelock
-  const RariMineV3 = await ethers.getContractFactory("RariMineV3");
+  const RariMineV3 = await hre.ethers.getContractFactory("RariMineV3");
   const rariMineV3 = await RariMineV3.attach(set.rariMineAddress)
   await changeOwner(rariMineV3, set.timelock, "rariMineV3")
   
   //changing Locking and RariMineV3 proxyAdmin address
   //setting proxyAdmin that owned by governance
-  const admin = (await upgrades.admin.getInstance())
+  const admin = (await hre.upgrades.admin.getInstance())
 
-  await changeAdminProxy(admin, locking, set.adminProxyAddress, "locking")
-  await changeAdminProxy(admin, rariMineV3, set.adminProxyAddress, "rariMineV3" )
+  await changeAdminProxy(admin, locking, set.adminProxyAddress, "locking", hre)
+  await changeAdminProxy(admin, rariMineV3, set.adminProxyAddress, "rariMineV3", hre)
 
-}
+});
 
 async function changeOwner(contract: any, newOwner: string, contractName: string) {
   const oldOwner = await contract.owner();
@@ -84,17 +84,10 @@ async function changeOwner(contract: any, newOwner: string, contractName: string
   console.log(`for contract ${contractName} at ${contract.address} changed owner from ${oldOwner} to ${await contract.owner()}`)
 }
 
-async function changeAdminProxy(admin: any, contract : any, newAdmin: string, contractName: string) {
+async function changeAdminProxy(admin: any, contract : any, newAdmin: string, contractName: string, hre: any) {
   const oldAdmin = await admin.getProxyAdmin(contract.address)
   await admin.changeProxyAdmin(contract.address, newAdmin)
-  const ProxyAdmin = await ethers.getContractFactory("ProxyAdmin");
+  const ProxyAdmin = await hre.ethers.getContractFactory("ProxyAdmin");
   const newAdminContract = await ProxyAdmin.attach(newAdmin)
   console.log(`for contract ${contractName} at ${contract.address} changed ProxyAdmin address from ${oldAdmin} to ${await newAdminContract.getProxyAdmin(contract.address)}`)
 }
-
-main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });

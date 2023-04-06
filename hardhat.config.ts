@@ -33,10 +33,11 @@ function createNetwork(name: string): HttpNetworkUserConfig {
 
   return {
     from: json.address,
-    gasPrice: parseInt(json.gasPrice),
+    gasPrice: "auto",
     chainId: parseInt(json.network_id),
     url: json.url,
-    accounts: [json.key]
+    accounts: [json.key],
+    gas: "auto"
   };
 }
 

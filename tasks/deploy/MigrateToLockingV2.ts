@@ -1,25 +1,28 @@
-import { ethers, network, upgrades } from "hardhat";
+
+import { task } from "hardhat/config";
+import { Locking__factory, Locking } from "../../typechain";
 
 const mainnet: string = "0x096Bd9a7a2e703670088C05035e23c7a9F428496"
 
-async function main() {
-  console.log(`upgrading Locking on network ${network.name}`)
-  
-  const [deployer] = await ethers.getSigners();
+task("deploy:Locking", "Upgrade").setAction(async (_, hre) => {
+
+  console.log(`upgrading Locking on network ${hre.network.name}`)
+
+  const [deployer] = await hre.ethers.getSigners();
   console.log("Deploying contracts with the account:", deployer.address);
 
-  const Locking = await ethers.getContractFactory("Locking")
+  const Locking = await hre.ethers.getContractFactory("Locking") as Locking__factory;
 
   const locking = await Locking.attach(mainnet)
-  if (network.name !== "mainnet") {
-    throw new Error("This migration works only for goerli and mainnet"); 
+  if (hre.network.name !== "mainnet") {
+    throw new Error("This migration works only for mainnet");
   }
 
   //stopping locking
   await locking.stop();
   console.log(`set stopped = ${await locking.stopped()}`)
 
-  await upgrades.upgradeProxy(mainnet, Locking);
+  await hre.upgrades.upgradeProxy(mainnet, Locking);
 
   //migrating balance lines
   await locking.migrateBalanceLines(balance);
@@ -41,7 +44,7 @@ async function main() {
   console.log(`set stopped = ${await locking.stopped()}`)
   console.log(`migration finished`)
 
-}
+});
 
 const balance = [3, 6, 7, 9, 13, 15, 16, 19, 20, 21, 22, 35, 37,
   45, 91, 104, 109, 110, 111,
@@ -326,7 +329,7 @@ const users1 = [
   '0x0CCfA1c3441F3fEbDcEE067bd1Cbe3af7BBB614b',
   '0xA6A97c1e6f99C64579d2E576c0C3af4304EE314d',
   '0xC850191CAD9b9B9a1d7eab22Fa441f5Ee3A47180',
-  
+
 ]
 
 const users2 = [
@@ -581,10 +584,3 @@ const users2 = [
   '0x3984F87c98Aa60e2742a59Efd99886966A4b1A6A',
   '0x40b3e336DC1A19C169172D59152BdB1D62F8E690',
 ]
-
-main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
