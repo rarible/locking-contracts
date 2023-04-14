@@ -25,7 +25,7 @@ jobs:
       uses: foundry-rs/foundry-toolchain@v1
 
     - name: Install dependencies
-      run: yarn
+      run: rm -f yarn.lock && yarn
 
     - name: Build the contracts
       run: yarn compile && yarn compile_foundry
