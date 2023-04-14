@@ -21,17 +21,11 @@ jobs:
       with:
         node-version: v18.13.0
 
+    - name: Install Foundry
+      uses: foundry-rs/foundry-toolchain@v1
+
     - name: Install dependencies
       run: yarn
-
-    - name: Install foundry 1
-      run: curl -L https://foundry.paradigm.xyz | bash
-    
-    - name: Install foundry 2
-      run: source /home/runner/.bashrc
-
-    - name: Install foundry 3
-      run: foundryup
 
     - name: Build the contracts
       run: yarn compile
