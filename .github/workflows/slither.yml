@@ -21,21 +21,18 @@ jobs:
       with:
         node-version: v18.13.0
 
-    - name: Install Foundry
-      uses: foundry-rs/foundry-toolchain@v1
-
     - name: Install dependencies
       run: yarn
 
     - name: Build the contracts
-      run: yarn compile && yarn compile_foundry
+      run: yarn compile
 
     - name: Run Slither
       uses: crytic/slither-action@v0.3.0
       id: slither
       with:
         ignore-compile: true
-        slither-args: --show-ignored-findings --checklist --markdown-root ${{ github.server_url }}/${{ github.repository }}/blob/${{ github.sha }}/
+        slither-args: --foundry-ignore-compile --compile-force-framework hardhat --show-ignored-findings --checklist --markdown-root ${{ github.server_url }}/${{ github.repository }}/blob/${{ github.sha }}/
         fail-on: none
 
     - name: Create/update checklist as PR comment
