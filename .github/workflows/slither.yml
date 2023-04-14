@@ -1,0 +1,50 @@
+name: Slither Analysis
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Set up Node
+      uses: actions/setup-node@v3
+      with:
+        node-version: v18.13.0
+
+    - name: Install Foundry
+      uses: foundry-rs/foundry-toolchain@v1
+
+    - name: Install dependencies
+      run: yarn
+
+    - name: Build the contracts
+      run: yarn compile && yarn compile_foundry
+
+    - name: Run Slither
+      uses: crytic/slither-action@v0.3.0
+      id: slither
+      with:
+        ignore-compile: true
+        slither-args: --exclude-dependencies --exclude-informational --foundry-ignore-compile --compile-force-framework hardhat --show-ignored-findings --checklist --markdown-root ${{ github.server_url }}/${{ github.repository }}/blob/${{ github.sha }}/
+        fail-on: none
+
+    - name: Create/update checklist as PR comment
+      uses: actions/github-script@v6
+      if: github.event_name == 'pull_request'
+      with:
+        script: |
+          console.log("script start 00")
+          const script = require('.github/scripts/comment')
+          const header = '# Slither report'
+          const body = `${{ steps.slither.outputs.stdout }}`
+          await script({ github, context, header, body })
