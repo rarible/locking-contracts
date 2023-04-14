@@ -19,7 +19,7 @@ jobs:
     - name: Set up Node
       uses: actions/setup-node@v3
       with:
-        node-version: v18.13.0
+        node-version: v16.20.0
 
     - name: Install Foundry
       uses: foundry-rs/foundry-toolchain@v1
