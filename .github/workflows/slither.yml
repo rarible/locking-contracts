@@ -35,7 +35,7 @@ jobs:
       id: slither
       with:
         ignore-compile: true
-        slither-args: --foundry-ignore-compile --compile-force-framework hardhat --show-ignored-findings --checklist --markdown-root ${{ github.server_url }}/${{ github.repository }}/blob/${{ github.sha }}/
+        slither-args: --exclude-dependencies --exclude-informational --foundry-ignore-compile --compile-force-framework hardhat --show-ignored-findings --checklist --markdown-root ${{ github.server_url }}/${{ github.repository }}/blob/${{ github.sha }}/
         fail-on: none
 
     - name: Create/update checklist as PR comment
