@@ -24,6 +24,11 @@ jobs:
     - name: Install dependencies
       run: yarn
 
+    - name: Install foundry
+      run: |
+        curl -L https://foundry.paradigm.xyz | bash
+        foundryup
+
     - name: Build the contracts
       run: yarn compile
       env:
