@@ -28,7 +28,7 @@ jobs:
       run: rm -f yarn.lock && yarn
 
     - name: Build the contracts
-      run: yarn compile && yarn compile_foundry
+      run: yarn compile
 
     - name: Run Slither
       uses: crytic/slither-action@v0.3.0
