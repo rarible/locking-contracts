@@ -46,5 +46,5 @@ jobs:
           console.log("script start 01")
           const script = require('.github/scripts/comment')
           const header = '# Slither report'
-          const body = `${{ steps.slither.outputs.stdout }}`
+          const body = escape(`${{ steps.slither.outputs.stdout }}`)
           await script({ github, context, header, body })
