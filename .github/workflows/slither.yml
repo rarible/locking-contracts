@@ -43,7 +43,7 @@ jobs:
       if: github.event_name == 'pull_request'
       with:
         script: |
-          console.log("script start 00")
+          console.log("script start 01")
           const script = require('.github/scripts/comment')
           const header = '# Slither report'
           const body = `${{ steps.slither.outputs.stdout }}`
