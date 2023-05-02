@@ -183,8 +183,9 @@ abstract contract LockingBase is OwnableUpgradeable, IVotesUpgradeable {
         uint96 cliffSide = (uint96(cliff - uint32(minCliffPeriod)) * (ST_FORMULA_CLIFF_MULTIPLIER)) / (MAX_CLIFF_PERIOD - uint32(minCliffPeriod));
         uint96 slopeSide = (uint96((slopePeriod - uint32(minSlopePeriod))) * (ST_FORMULA_SLOPE_MULTIPLIER)) / (MAX_SLOPE_PERIOD - uint32(minSlopePeriod));
         uint96 multiplier = cliffSide + (slopeSide) + (ST_FORMULA_CONST_MULTIPLIER);
-
-        lockAmount = (amount * multiplier) / (ST_FORMULA_DIVIDER);
+        
+        uint256 amountMultiplied = uint256(amount) * uint256(multiplier);
+        lockAmount = uint96(amountMultiplied / (ST_FORMULA_DIVIDER));
         lockSlope = divUp(lockAmount, slopePeriod);
     }
 
@@ -280,7 +281,76 @@ abstract contract LockingBase is OwnableUpgradeable, IVotesUpgradeable {
         updateTotalSupplyLine(time);
     }
 
-    //48 => 43 add new accounts and totallSupplyLine
+    function migrateBalanceLines(uint[] calldata ids) external onlyOwner {
+        uint len = ids.length;
+        for (uint i = 0; i < len; i++) {
+            uint id = ids[i];
+            Lock storage lock = locks[id];
+            address user = lock.delegate;
+            LibBrokenLine.LineDataOld storage oldLine = accountsOld[user].balance.initiatedLines[id];
+
+             LibBrokenLine.Line memory line = LibBrokenLine.Line({
+                start: uint32(oldLine.line.start),
+                bias: uint96(oldLine.line.bias),
+                slope: uint96(oldLine.line.slope),
+                cliff: uint32(oldLine.cliff)
+            });
+
+            //adding the line to balance broken line
+            accounts[user].balance._addOneLine(id, line);
+            //adding the line to totalSupply broken line
+            totalSupplyLine._addOneLine(id, line);
+        }
+    }
+
+    function migrateLockedLines(uint[] calldata ids) external onlyOwner {
+        uint len = ids.length;
+        for (uint i = 0; i < len; i++) {
+            uint id = ids[i];
+            Lock storage lock = locks[id];
+            address user = lock.account;
+            LibBrokenLine.LineDataOld storage oldLine = accountsOld[user].locked.initiatedLines[id];
+
+             LibBrokenLine.Line memory line = LibBrokenLine.Line({
+                start: uint32(oldLine.line.start),
+                bias: uint96(oldLine.line.bias),
+                slope: uint96(oldLine.line.slope),
+                cliff: uint32(oldLine.cliff)
+            });
+
+            //adding the line to balance broken line
+            accounts[user].locked._addOneLine(id, line);
+        }
+    }
+
+
+    function copyAmountMakeSnapshots(address[] calldata users) external onlyOwner {
+        uint32 currentBlock = getBlockNumber();
+        uint32 currentEpoch = roundTimestamp(currentBlock);
+        uint len = users.length;
+        for (uint i = 0; i < len; i++) {
+            Account storage newData = accounts[users[i]];
+            AccountOld storage oldData = accountsOld[users[i]];
+
+            //copy amount
+            newData.amount = uint96(oldData.amount);
+
+            if (newData.balance.initial.bias > 0) {
+                newData.balance.update(currentEpoch);
+                newData.balance.saveSnapshot(currentEpoch, currentBlock);
+            }
+
+            if (newData.locked.initial.bias > 0) {
+                newData.locked.update(currentEpoch);
+                newData.locked.saveSnapshot(currentEpoch, currentBlock);
+            }
+        }
+
+        totalSupplyLine.saveSnapshot(currentEpoch, currentBlock);
+
+    }
+
+    //48 => 43 add new accounts and totalSupplyLine
     uint256[43] private __gap;
 
 }
