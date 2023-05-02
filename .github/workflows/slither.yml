@@ -25,10 +25,10 @@ jobs:
       uses: foundry-rs/foundry-toolchain@v1
 
     - name: Install dependencies
-      run: rm -f yarn.lock && yarn
+      run: yarn
 
     - name: Build the contracts
-      run: yarn compile
+      run: yarn compile && yarn compile_foundry
 
     - name: Run Slither
       uses: crytic/slither-action@v0.3.0
