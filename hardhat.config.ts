@@ -15,6 +15,7 @@ import "hardhat-gas-reporter";
 import '@openzeppelin/hardhat-upgrades';
 import * as tdly from "@tenderly/hardhat-tenderly";
 import "hardhat-gas-reporter";
+import fs from 'fs';
 tdly.setup();
 
 dotenv.config();
@@ -29,16 +30,28 @@ function getConfigPath() {
 }
 
 function createNetwork(name: string): HttpNetworkUserConfig {
-  var json = require(path.join(getConfigPath(), name + ".json"));
-
-  return {
-    from: json.address,
-    gasPrice: "auto",
-    chainId: parseInt(json.network_id),
-    url: json.url,
-    accounts: [json.key],
-    gas: "auto"
-  };
+  const configPath = path.join(getConfigPath(), name + ".json");
+  if (fs.existsSync(configPath)) {
+    var json = require(configPath);
+    return {
+      from: json.address,
+      gasPrice: "auto",
+      chainId: parseInt(json.network_id),
+      url: json.url,
+      accounts: [json.key],
+      gas: "auto"
+    };
+  } else {
+    // File doesn't exist in path
+    return {
+      from: "0x0000000000000000000000000000000000000000",
+      gas: 0,
+      chainId: 0,
+      url: "",
+      accounts: [],
+      gasPrice: 0
+    };
+  }
 }
 
 const config: HardhatUserConfig = {
