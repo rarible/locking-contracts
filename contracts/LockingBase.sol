@@ -242,6 +242,29 @@ abstract contract LockingBase is OwnableUpgradeable, IVotesUpgradeable {
     }
 
     /**
+        @notice checks if the line is relevant and needs to be copied to the new data structure
+     */
+    function isRelevant(uint id) external view returns(bool, uint, address, uint, address) {
+        uint32 currentBlock = getBlockNumber();
+        uint32 currentEpoch = roundTimestamp(currentBlock);
+
+        address delegate = locks[id].delegate;
+        LibBrokenLine.LineDataOld storage oldLineBalance = accountsOld[delegate].balance.initiatedLines[id];
+
+        address account = locks[id].account;
+        LibBrokenLine.LineDataOld storage oldLineLocked = accountsOld[account].locked.initiatedLines[id];
+
+        //line adds at time start + cliff + slopePeriod + 1(mod)
+        uint slopeLocked = (oldLineLocked.line.bias / oldLineLocked.line.slope);
+        uint slopeBalance = (oldLineBalance.line.bias / oldLineBalance.line.slope);
+        uint slope = slopeLocked > slopeBalance ? slopeLocked : slopeBalance;
+        
+        uint finishTime = oldLineLocked.line.start + oldLineLocked.cliff + slope + 1;
+
+        return ((finishTime < currentEpoch) ? false : true, oldLineBalance.line.start, delegate, oldLineLocked.line.start, account);
+    }
+
+    /**
      * @dev Throws if stopped
      */
     modifier notStopped() {
