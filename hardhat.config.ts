@@ -35,10 +35,11 @@ function createNetwork(name: string): HttpNetworkUserConfig {
     var json = require(configPath);
     return {
       from: json.address,
-      gas: parseInt(json.gasPrice),
+      gasPrice: "auto",
       chainId: parseInt(json.network_id),
       url: json.url,
-      accounts: [json.key]
+      accounts: [json.key],
+      gas: "auto"
     };
   } else {
     // File doesn't exist in path
@@ -47,7 +48,8 @@ function createNetwork(name: string): HttpNetworkUserConfig {
       gas: 0,
       chainId: 0,
       url: "",
-      accounts: []
+      accounts: [],
+      gasPrice: 0
     };
   }
 }
