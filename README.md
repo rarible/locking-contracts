@@ -17,6 +17,7 @@ Deployed on mainnet 0x096Bd9a7a2e703670088C05035e23c7a9F428496
 
 ### Test
   - yarn test
+  - yarn test_foundry
 
 ### Features
 

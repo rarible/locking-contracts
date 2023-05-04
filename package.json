@@ -11,6 +11,8 @@
     "compile_foundry": "forge build",
     "test_foundry": "forge test",
     "deploy": "hardhat deploy:TestERC20 --network goerli",
+    "deploy_goerli": "npx hardhat deploy:Locking --network goerli",
+    "deploy_mainnet": "hardhat deploy:Locking --network mainnet",
     "verify_tenderly": "npx hardhat tenderly:verify TestERC20=0xca0867dd0ffe7c31d7ea3dD99f9f55B32739F2c6 --network goerli --verbose",
     "verify_etherscan": "npx hardhat verify 0x44Ddcc3667e0b2Dd80E3887Cd7d126c9DD3247E6 --network goerli"
   },
@@ -29,7 +31,7 @@
     "@typechain/ethers-v5": "^10.2.0",
     "@typechain/hardhat": "^6.1.5",
     "dotenv": "^16.0.3",
-    "ethers": "^6.0.8",
+    "ethers": "^5.4.0",
     "hardhat-abi-exporter": "^2.10.1",
     "hardhat-gas-reporter": "^1.0.9",
     "hardhat-truffle5": "^1.0.1",
