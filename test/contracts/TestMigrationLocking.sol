@@ -83,40 +83,14 @@ contract TestMigrationLocking is Locking {
         return ((finishTime < currentEpoch) ? false : true);
     }
 
-   /*
-    function isRelevant(uint id) external view returns(bool, uint) {
-        uint32 currentBlock = getBlockNumber();
-        uint32 currentEpoch = roundTimestamp(currentBlock);
+    uint32 public shift;
 
-        Lock storage lock = locks[id];
-
-        LibBrokenLine.LineDataOld storage oldLine = accountsOld[lock.delegate].balance.initiatedLines[id];
-
-        //line adds at time start + cliff + slopePeriod + 1(mod)
-        uint finishTime = oldLine.line.start + oldLine.cliff + (oldLine.line.bias / oldLine.line.slope) + 1;
-
-        return ((finishTime < currentEpoch) ? false : true, oldLine.line.start);
+    function setShift(uint32 _shift) external {
+        shift = _shift;
     }
 
+    function getBlockNumber() internal override view returns (uint32) {
+        return uint32(block.number) + shift;
+    }
     
-    function getBalanceLineData(uint id) external view returns(address, LibBrokenLine.LineDataOld memory, uint, bool) {
-        uint32 currentBlock = getBlockNumber();
-        uint32 currentEpoch = roundTimestamp(currentBlock);
-        address delegate = locks[id].delegate;
-
-        LibBrokenLine.LineDataOld memory oldLine = accountsOld[delegate].balance.initiatedLines[id];
-        uint finishTime = oldLine.line.start + oldLine.cliff + (oldLine.line.bias / oldLine.line.slope) + 1;
-        return(delegate, oldLine, finishTime, (finishTime < currentEpoch) ? false : true);
-    }
-
-    function getLockedLineData(uint id) external view returns(address, LibBrokenLine.LineDataOld memory, uint, bool) {
-        uint32 currentBlock = getBlockNumber();
-        uint32 currentEpoch = roundTimestamp(currentBlock);
-        address account = locks[id].account;
-
-        LibBrokenLine.LineDataOld memory oldLine = accountsOld[account].locked.initiatedLines[id];
-        uint finishTime = oldLine.line.start + oldLine.cliff + (oldLine.line.bias / oldLine.line.slope) + 1;
-        return(account, oldLine, finishTime, (finishTime < currentEpoch) ? false : true);
-    }
-    */
 }

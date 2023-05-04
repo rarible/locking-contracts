@@ -59,8 +59,7 @@ task("deploy:Locking", "Upgrade").setAction(async (_, hre) => {
 
   const Locking = await hre.ethers.getContractFactory("Locking") as Locking__factory;
   
-  //const locking = await hre.upgrades.deployProxy(Locking, [token, startingPointWeek, minCliffPeriod, minSlopePeriod], { initializer: '__Locking_init' });
-  const locking = await Locking.deploy();
+  const locking = await hre.upgrades.deployProxy(Locking, [token, startingPointWeek, minCliffPeriod, minSlopePeriod], { initializer: '__Locking_init' });
   await locking.deployed();
 
   console.log("locking address:", locking.address);
