@@ -416,7 +416,7 @@ contract("RariMineV3", accounts => {
         });
     });
 
-    describe("Check claim()", () => {
+    describe("Check claimAndDelegate()", () => {
 
       it("Should claimAndDelegate with right delegate, 40% claimer, 60% locking", async () => {
           const balanceClaimer1 = {
