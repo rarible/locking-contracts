@@ -103,6 +103,10 @@ contract("RariMineV3", accounts => {
             truffleAssert.eventEmitted(receipt, 'Claim');
             truffleAssert.eventEmitted(receipt, 'Value');
 
+            const counter = await locking.counter();
+            const accountAndDelegate = await locking.getAccountAndDelegate(counter)
+            assert.equal(accountAndDelegate._delegate, claimer1)
+
             assert.equal(await token.balanceOf(locking.address), 600);
             assert.equal(await token.balanceOf(claimer1), 400);
         });
@@ -411,6 +415,46 @@ contract("RariMineV3", accounts => {
             
         });
     });
+
+    describe("Check claim()", () => {
+
+      it("Should claimAndDelegate with right delegate, 40% claimer, 60% locking", async () => {
+          const balanceClaimer1 = {
+              "recipient": claimer1,
+              "value": 1000
+          };
+          const balances = [
+              balanceClaimer1
+          ];
+          // mint tokens and approve to spent by rari mine
+          await token.mint(tokenOwner, 1000);
+          await token.approve(rariMine.address, 1000, { from: tokenOwner });
+          
+          // specify balances - increase by 1000
+          await rariMine.doOverride(balances);
+
+          balanceClaimer1.value = 2000;
+
+          const prepareMessage = getPrepareMessage(balanceClaimer1, rariMine.address, version, chainId);
+          console.log('prepareMessage', prepareMessage);
+
+          const signature = await signPersonalMessage(prepareMessage, signer);
+
+          const delegate = accounts[8];
+
+          const receipt = await rariMine.claimAndDelegate(balanceClaimer1, delegate, signature.v, signature.r, signature.s, { from: claimer1 });
+          truffleAssert.eventEmitted(receipt, 'Claim');
+          truffleAssert.eventEmitted(receipt, 'Value');
+
+          const counter = await locking.counter();
+          const accountAndDelegate = await locking.getAccountAndDelegate(counter)
+          assert.equal(accountAndDelegate._delegate, delegate)
+
+          assert.equal(await token.balanceOf(locking.address), 600);
+          assert.equal(await token.balanceOf(claimer1), 400);
+      });
+    });
+  
     describe("Check signer", () => {
 
         it("only signer should sign the message", async () => {

@@ -74,8 +74,8 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) public {
-        claimAndDelegate(_balance, _msgSender(), v, r, s);
+    ) external {
+        _claimAndDelegate(_balance, _msgSender(), v, r, s);
     }
 
     function claimAndDelegate(
@@ -84,7 +84,17 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) public {
+    ) external {
+        _claimAndDelegate(_balance, delegate, v, r, s);
+    }
+
+    function _claimAndDelegate(
+        Balance memory _balance,
+        address delegate,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) internal {
         require(prepareMessage(_balance, address(this)).recover(v, r, s) == signer, "signer should sign balances");
 
         address recipient = _balance.recipient;
@@ -114,6 +124,8 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
 
         revert("_msgSender() is not the receipient");
     }
+
+
 
     function doOverride(Balance[] memory _balances) public onlyOwner {
         for (uint256 i = 0; i < _balances.length; ++i) {
