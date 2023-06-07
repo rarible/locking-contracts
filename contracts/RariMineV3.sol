@@ -75,6 +75,16 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
         bytes32 r,
         bytes32 s
     ) public {
+        claimAndDelegate(_balance, _msgSender(), v, r, s);
+    }
+
+    function claimAndDelegate(
+        Balance memory _balance,
+        address delegate,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) public {
         require(prepareMessage(_balance, address(this)).recover(v, r, s) == signer, "signer should sign balances");
 
         address recipient = _balance.recipient;
@@ -93,10 +103,10 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
 
             // lock some tokens
             uint256 lockAmount = toClaim - (claimAmount);
-            if(lockAmount > 0) {
+            if (lockAmount > 0) {
                 require(token.transferFrom(tokenOwner, address(this), lockAmount), "transfer to RariMine is not successful");
                 require(token.approve(address(locking), lockAmount), "approve is not successful");
-                locking.lock(recipient, recipient, uint96(lockAmount), uint32(claimSlopeWeeks), uint32(claimCliffWeeks));
+                locking.lock(recipient, delegate, uint96(lockAmount), uint32(claimSlopeWeeks), uint32(claimCliffWeeks));
             }
 
             return;
