@@ -125,8 +125,6 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
         revert("_msgSender() is not the receipient");
     }
 
-
-
     function doOverride(Balance[] memory _balances) public onlyOwner {
         for (uint256 i = 0; i < _balances.length; ++i) {
             claimed[_balances[i].recipient] = _balances[i].value;
