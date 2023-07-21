@@ -52,6 +52,7 @@ jobs:
         script: |
           console.log("script start 01")
           const script = require('.github/scripts/comment')
+          const fs = require('fs');
           const header = '# Slither report'
-          const body = escape(`${{ steps.slither.outputs.stdout }} | sed 's/`/ /g' `)
+          const body = fs.readFileSync(filePath, 'utf8');
           await script({ github, context, header, body })
