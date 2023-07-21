@@ -54,5 +54,5 @@ jobs:
           const script = require('.github/scripts/comment')
           const fs = require('fs');
           const header = '# Slither report'
-          const body = fs.readFileSync('slither.md', 'utf8');
+          const body = fs.readFileSync('slither.md');
           await script({ github, context, header, body })
