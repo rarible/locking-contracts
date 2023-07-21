@@ -55,4 +55,4 @@ jobs:
           const fs = require('fs');
           const header = '# Slither report'
           const body = fs.readFileSync('slither.md', 'ascii');
-          await script({ github, context, header, body })
+          await script({ github, context, header, (body + "").replace(/\n/g, "<br>") })
