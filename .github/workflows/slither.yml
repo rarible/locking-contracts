@@ -56,4 +56,5 @@ jobs:
           const header = '# Slither report'
           let body = fs.readFileSync('slither.md', 'ascii');
           body = (body + "").replaceAll("\\n", "<br>")
+          body = (body + "").replaceAll("\\t", "<space>")
           await script({ github, context, header, body })
