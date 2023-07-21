@@ -37,10 +37,16 @@ jobs:
         ignore-compile: true
         slither-args: --exclude-dependencies --exclude-informational --foundry-ignore-compile --compile-force-framework hardhat --show-ignored-findings --checklist --markdown-root ${{ github.server_url }}/${{ github.repository }}/blob/${{ github.sha }}/
         fail-on: none
+        
+    - shell: bash
+      run: |
+        echo ${{ steps.slither.outputs.stdout }} | sed 's/`/ /g' > slither.md
+        cat slither.md
 
     - name: Create/update checklist as PR comment
       uses: actions/github-script@v6
       if: github.event_name == 'pull_request'
+      
       with:
         script: |
           console.log("script start 01")
