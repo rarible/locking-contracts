@@ -40,7 +40,7 @@ jobs:
         
     - shell: bash
       run: |
-        echo "${{ toJson(steps.slither.outputs.stdout) }}" 
+        echo "${{ toJSON(steps.slither.outputs.stdout) }}" 
 
     - name: Create/update checklist as PR comment
       uses: actions/github-script@v6
