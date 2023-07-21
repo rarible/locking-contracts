@@ -55,4 +55,5 @@ jobs:
           const fs = require('fs');
           const header = '# Slither report'
           const body = fs.readFileSync('slither.md');
+          console.log(body);
           await script({ github, context, header, body })
