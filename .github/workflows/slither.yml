@@ -40,7 +40,8 @@ jobs:
         
     - shell: bash
       run: |
-        echo ${{ toJSON(steps.slither.outputs.stdout) }}
+        echo ${{ toJSON(steps.slither.outputs.stdout) }} > slither.md
+        sed -i 's/\'this\'/this/' slither.md
 
     - name: Create/update checklist as PR comment
       uses: actions/github-script@v6
@@ -51,6 +52,5 @@ jobs:
           console.log("script start 01")
           const script = require('.github/scripts/comment')
           const header = '# Slither report'
-          const this = "this"
           const body = escape(`${{ steps.slither.outputs.stdout }} | sed 's/`/ /g' `)
           await script({ github, context, header, body })
