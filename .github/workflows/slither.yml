@@ -42,6 +42,7 @@ jobs:
       run: |
         echo ${{ toJSON(steps.slither.outputs.stdout) }} > slither.md
         sed -i "s/'this'/this/" slither.md
+        cat slither.md
 
     - name: Create/update checklist as PR comment
       uses: actions/github-script@v6
