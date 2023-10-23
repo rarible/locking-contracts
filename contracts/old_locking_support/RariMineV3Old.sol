@@ -6,20 +6,20 @@ import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 
-import "./libs/LibString.sol";
-import "./libs/LibAddress.sol";
-import "./libs/LibUint.sol";
-import "./IRariMine.sol";
-import "./ILocking.sol";
+import "../libs/LibString.sol";
+import "../libs/LibAddress.sol";
+import "../libs/LibUint.sol";
+import "../IRariMine.sol";
+import "./ILockingOld.sol";
 
-contract RariMineV3 is OwnableUpgradeable, IRariMine {
+contract RariMineV3Old is OwnableUpgradeable, IRariMine {
     using LibString for string;
     using LibUint for uint256;
     using LibAddress for address;
 
     IERC20Upgradeable public token;
     address public tokenOwner;
-    ILocking public locking;
+    ILockingOld public locking;
 
     uint256 public claimFormulaClaim;
     uint256 public claimCliffWeeks;
@@ -42,7 +42,7 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
     function __RariMineV3_init(
         IERC20Upgradeable _token,
         address _tokenOwner,
-        ILocking _locking,
+        ILockingOld _locking,
         uint256 _claimCliffWeeks,
         uint256 _claimSlopeWeeks,
         uint256 _claimFormulaClaim
@@ -55,7 +55,7 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
     function __RariMineV3_init_unchained(
         IERC20Upgradeable _token,
         address _tokenOwner,
-        ILocking _locking,
+        ILockingOld _locking,
         uint256 _claimCliffWeeks,
         uint256 _claimSlopeWeeks,
         uint256 _claimFormulaClaim
@@ -116,7 +116,7 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
             if (lockAmount > 0) {
                 require(token.transferFrom(tokenOwner, address(this), lockAmount), "transfer to RariMine is not successful");
                 require(token.approve(address(locking), lockAmount), "approve is not successful");
-                locking.lock(recipient, delegate, uint96(lockAmount), uint32(claimSlopeWeeks), uint32(claimCliffWeeks));
+                locking.lock(recipient, delegate, (lockAmount), (claimSlopeWeeks), (claimCliffWeeks));
             }
 
             return;
@@ -171,7 +171,7 @@ contract RariMineV3 is OwnableUpgradeable, IRariMine {
     }
 
     function setLocking(address newLocking) external onlyOwner {
-        locking = ILocking(newLocking);
+        locking = ILockingOld(newLocking);
         emit SetNewLocking(newLocking);
     }
 

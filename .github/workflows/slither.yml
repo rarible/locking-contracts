@@ -37,15 +37,24 @@ jobs:
         ignore-compile: true
         slither-args: --exclude-dependencies --exclude-informational --foundry-ignore-compile --compile-force-framework hardhat --show-ignored-findings --checklist --markdown-root ${{ github.server_url }}/${{ github.repository }}/blob/${{ github.sha }}/
         fail-on: none
+        
+    - shell: bash
+      run: |
+        echo ${{ toJSON(steps.slither.outputs.stdout) }} > slither.md
+        sed -i "s/'this'/this/" slither.md
+        cat slither.md
 
     - name: Create/update checklist as PR comment
       uses: actions/github-script@v6
       if: github.event_name == 'pull_request'
+      
       with:
         script: |
           console.log("script start 01")
           const script = require('.github/scripts/comment')
+          const fs = require('fs');
           const header = '# Slither report'
-          const this = "this"
-          const body = escape(`${{ steps.slither.outputs.stdout }} | sed 's/`/ /g' `)
+          let body = fs.readFileSync('slither.md', 'ascii');
+          body = (body + "").replaceAll("\\n", "<br>")
+          body = (body + "").replaceAll("\\t", "<space>")
           await script({ github, context, header, body })
