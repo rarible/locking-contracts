@@ -14,6 +14,7 @@
     "deploy-rarimine": "hardhat --network goerli deploy --tags all",
     "deploy_goerli": "npx hardhat deploy:Locking --network goerli",
     "update-rarimineold-goerli": "npx hardhat update:RariMineOldHardware --network goerli",
+    "deploy-rarimineold-goerli": "npx hardhat deploy:RariMineOldHardware --network goerli",
     "deploy_mainnet": "hardhat deploy:Locking --network mainnet",
     "verify_tenderly": "npx hardhat tenderly:verify TestERC20=0xca0867dd0ffe7c31d7ea3dD99f9f55B32739F2c6 --network goerli --verbose",
     "verify_etherscan": "npx hardhat verify 0x44Ddcc3667e0b2Dd80E3887Cd7d126c9DD3247E6 --network goerli"
