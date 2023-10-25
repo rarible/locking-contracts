@@ -1,6 +1,6 @@
 import { task } from "hardhat/config";
 import { RariMineV3Old__factory } from "../../typechain";
-import { TrezorSigner } from "@nxqbao/eth-signer-trezor";
+import { getHardwareSigner } from "../../lib/utils/getHardwareSigner";
 
 type NetworkSettings = {
   rariMine: string;
@@ -28,16 +28,13 @@ function getSettings(network: string) : NetworkSettings {
 		return settings["default"];
 	}
 } 
-task("update:RariMineOld", "Upgrade").setAction(async (_, hre) => {
-  const { getNamedAccounts } = hre;
-  const { deployer } = await getNamedAccounts();
 
+task("update:RariMineOldHardware", "Upgrade").setAction(async (_, hre) => {
   const { rariMine } = getSettings(hre.network.name)
-  console.log(`updating rariMine at: ${rariMine}, on network: ${hre.network.name}, using deployer address: ${deployer}`)
-
+  const signer = await getHardwareSigner(hre)
+  console.log(`updating rariMine at: ${rariMine}, on network: ${hre.network.name}, using deployer address: ${await signer?.getAddress()}`)
   
-  const trezorSigner = new TrezorSigner(hre.ethers.provider, deployer)
-  const RariMineV3Old = await hre.ethers.getContractFactory("RariMineV3Old", trezorSigner) as RariMineV3Old__factory;
+  const RariMineV3Old = await hre.ethers.getContractFactory("RariMineV3Old", signer) as RariMineV3Old__factory;
   
   await hre.upgrades.upgradeProxy(rariMine, RariMineV3Old);
   console.log("RariMineV3Old upgraded");

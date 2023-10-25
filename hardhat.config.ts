@@ -59,7 +59,7 @@ function createNetwork(name: string): HttpNetworkUserConfig {
 const config: HardhatUserConfig = {
   namedAccounts: {
     deployer: {
-      default: 0, // "trezor://0x04609d9dd55accB3b1552C3721d8d964Ca95002a"
+      default: "trezor://0x04609d9dd55accB3b1552C3721d8d964Ca95002a",
       "goerli": "ledger://m/44'/60'/1'/0/0:0x84ded7b35314c827977c4794ed66e9a80f948269:",
       "polygon": "ledger://m/44'/60'/1'/0/0:0x84ded7b35314c827977c4794ed66e9a80f948269:",
     },
