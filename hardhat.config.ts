@@ -16,6 +16,8 @@ import '@openzeppelin/hardhat-upgrades';
 import * as tdly from "@tenderly/hardhat-tenderly";
 import "hardhat-gas-reporter";
 import fs from 'fs';
+import 'hardhat-deploy';
+
 tdly.setup();
 
 dotenv.config();
@@ -55,6 +57,13 @@ function createNetwork(name: string): HttpNetworkUserConfig {
 }
 
 const config: HardhatUserConfig = {
+  namedAccounts: {
+    deployer: {
+      default: "trezor://0x04609d9dd55accB3b1552C3721d8d964Ca95002a",
+      "goerli": "ledger://m/44'/60'/1'/0/0:0x84ded7b35314c827977c4794ed66e9a80f948269:",
+      "polygon": "ledger://m/44'/60'/1'/0/0:0x84ded7b35314c827977c4794ed66e9a80f948269:",
+    },
+  },
   defaultNetwork: "hardhat",
   networks: {
     hardhat: {
